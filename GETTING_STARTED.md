@@ -17,7 +17,7 @@ one mutating tool.
 ## 2. Clone the repo and install dependencies
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/maheshsane/salesforce-mcp-server.git
 cd salesforce-mcp-server
 python3 -m pip install -r requirements.txt
 cp .env.example .env
