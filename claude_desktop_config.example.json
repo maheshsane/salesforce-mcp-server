@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "salesforce-cloud": {
+      "command": "python3",
+      "args": ["/absolute/path/to/salesforce-mcp-server/server.py"]
+    }
+  }
+}

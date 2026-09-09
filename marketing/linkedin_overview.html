@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    color: #1a2233;
+  }
+  .page {
+    width: 1024px;
+    height: 1325px;
+    padding: 100px 88px;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+  .page:last-child { page-break-after: auto; }
+  .accent { color: #0b5fff; }
+  .tag {
+    display: inline-block;
+    background: #eef3ff;
+    color: #0b5fff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+  }
+  h1 { font-size: 42px; line-height: 1.15; margin: 0 0 16px 0; font-weight: 800; }
+  h2 { font-size: 28px; margin: 0 0 24px 0; font-weight: 800; color: #0b1730; }
+  h3 { font-size: 18px; margin: 0 0 6px 0; font-weight: 700; }
+  p { font-size: 15.5px; line-height: 1.55; color: #3a4356; margin: 0 0 12px 0; }
+  .sub { font-size: 19px; color: #55607a; line-height: 1.5; margin-bottom: 28px; }
+  .footer {
+    position: absolute; bottom: 50px; left: 64px; right: 64px;
+    font-size: 12px; color: #98a2b8; display: flex; justify-content: space-between;
+    border-top: 1px solid #e7ebf3; padding-top: 14px;
+  }
+  .cover .footer { color: #b9c8ff; border-top-color: #2b4fb0; }
+  .cover {
+    background: linear-gradient(160deg, #0b1730 0%, #0b3fae 100%);
+    color: white;
+  }
+  .cover .tag { background: rgba(255,255,255,0.12); color: #cfe0ff; }
+  .cover h1 { color: white; font-size: 50px; }
+  .cover .sub { color: #cfe0ff; font-size: 20px; }
+  .cover-meta {
+    position: absolute; bottom: 130px; left: 64px; right: 64px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .cover-author { font-size: 15px; color: #eaf0ff; }
+  .cover-author .name { font-size: 19px; font-weight: 700; color: white; }
+  .pill-row { display: flex; gap: 10px; margin-top: 26px; flex-wrap: wrap; }
+  .pill {
+    background: rgba(255,255,255,0.10); color: #eaf0ff; font-size: 13px;
+    padding: 7px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.18);
+  }
+
+  .stat-row { display: flex; gap: 20px; margin: 30px 0; }
+  .stat { flex: 1; background: #f5f7fb; border-radius: 12px; padding: 22px 20px; }
+  .stat .num { font-size: 34px; font-weight: 800; color: #0b5fff; }
+  .stat .label { font-size: 13px; color: #667; margin-top: 4px; }
+
+  .diagram {
+    background: #f5f7fb; border-radius: 14px; padding: 30px; margin: 20px 0;
+    font-size: 13.5px; color: #2b3550;
+  }
+  .diagram .row { display: flex; justify-content: space-between; gap: 14px; margin-bottom: 10px; }
+  .box {
+    flex: 1; background: white; border: 1.5px solid #cfd8ea; border-radius: 10px;
+    padding: 14px 12px; text-align: center; font-weight: 600;
+  }
+  .box.accentbox { border-color: #0b5fff; color: #0b5fff; }
+  .arrow { text-align: center; font-size: 18px; color: #9aa5bd; margin: 2px 0; }
+
+  .persona-grid { width: 100%; border-collapse: separate; border-spacing: 20px 20px; margin-top: 10px; }
+  .persona-grid td { width: 50%; vertical-align: top; padding: 0; }
+  .persona {
+    background: #f5f7fb; border-left: 4px solid #0b5fff; border-radius: 8px;
+    padding: 18px 20px;
+  }
+  .persona h3 { color: #0b1730; }
+  .persona .prompt {
+    font-size: 13.5px; font-style: italic; color: #55607a; margin-top: 8px;
+    border-top: 1px dashed #d7deec; padding-top: 8px;
+  }
+
+  ul.clean { margin: 0 0 14px 0; padding-left: 20px; }
+  ul.clean li { font-size: 15px; color: #3a4356; margin-bottom: 8px; line-height: 1.5; }
+
+  .cta {
+    background: #0b1730; color: white; border-radius: 16px; padding: 36px 40px;
+    margin-top: 24px;
+  }
+  .cta h2 { color: white; }
+  .cta p { color: #cfe0ff; }
+  .cta .link { color: #8fc3ff; font-weight: 700; }
+
+  .step {
+    display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-start;
+  }
+  .step .n {
+    flex: 0 0 34px; height: 34px; border-radius: 50%; background: #0b5fff; color: white;
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px;
+  }
+  .step .t { padding-top: 4px; }
+  .step .t b { font-size: 15px; }
+  .step .t span { font-size: 13.5px; color: #667; display: block; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1: COVER -->
+<div class="page cover">
+  <div class="tag">OPEN SOURCE &middot; MCP SERVER</div>
+  <h1>Salesforce Cloud<br>MCP Server</h1>
+  <p class="sub">Bringing live Salesforce data into a Claude conversation &mdash;<br>
+  for Sales, PreSales, Marketing, and Customer Success, in one server.</p>
+  <div class="pill-row">
+    <div class="pill">Sales Cloud</div>
+    <div class="pill">Service Cloud</div>
+    <div class="pill">Marketing Cloud</div>
+    <div class="pill">Model Context Protocol</div>
+    <div class="pill">Python</div>
+  </div>
+  <div class="cover-meta">
+    <div class="cover-author">
+      <div class="name">Mahesh Sane</div>
+      Built on Claude &middot; Anthropic's Model Context Protocol
+    </div>
+  </div>
+  <div class="footer">
+    <span>Salesforce Cloud MCP Server</span>
+    <span>github.com/&lt;your-repo&gt;</span>
+  </div>
+</div>
+
+<!-- PAGE 2: PROBLEM -->
+<div class="page">
+  <div class="tag">THE PROBLEM</div>
+  <h2>Four teams, four dashboards, one customer</h2>
+  <p>A Sales rep checks pipeline in one report. PreSales pulls deal detail from another
+  tab. Marketing builds a campaign ROI dashboard. Customer Success cross-references
+  renewal and case reports by hand every Monday morning. All four are describing the
+  same underlying Salesforce org &mdash; just through different, disconnected views of it.</p>
+  <p>Every one of those views takes a login, a click path, and a mental switch away from
+  the actual conversation someone's trying to have &mdash; with a customer, a manager,
+  or a teammate.</p>
+  <div class="stat-row">
+    <div class="stat"><div class="num">4</div><div class="label">functions this serves &mdash; Sales, PreSales, Marketing, CS</div></div>
+    <div class="stat"><div class="num">23</div><div class="label">ready-made tools across those functions</div></div>
+    <div class="stat"><div class="num">1</div><div class="label">conversation to get any of them an answer</div></div>
+  </div>
+  <p>This project asks a simple question: what if the CRM answered you directly, in
+  plain language, inside the conversation you're already having &mdash; instead of the
+  other way around?</p>
+  <div class="footer">
+    <span>Salesforce Cloud MCP Server</span>
+    <span>02</span>
+  </div>
+</div>
+
+<!-- PAGE 3: SOLUTION / ARCHITECTURE -->
+<div class="page">
+  <div class="tag">THE SOLUTION</div>
+  <h2>One MCP server, two ways to run it</h2>
+  <p>Built on Anthropic's <b>Model Context Protocol</b> &mdash; an open standard for
+  connecting an AI assistant to real, live data. Claude doesn't get a snapshot or a
+  training-time guess about your Salesforce org; it calls the same REST API your
+  browser does, with your own OAuth session, in real time.</p>
+  <div class="diagram">
+    <div class="row">
+      <div class="box accentbox">Claude<br><span style="font-weight:400;font-size:12px;">Desktop or Custom Connector</span></div>
+    </div>
+    <div class="arrow">&#8595;&#8593;&nbsp; MCP protocol (stdio locally, HTTPS remotely)</div>
+    <div class="row">
+      <div class="box">Sales tools</div>
+      <div class="box">PreSales tools</div>
+      <div class="box">Marketing tools</div>
+      <div class="box">CS tools</div>
+    </div>
+    <div class="arrow">&#8595;&#8593;&nbsp; OAuth 2.0</div>
+    <div class="row">
+      <div class="box accentbox">Sales / Service Cloud</div>
+      <div class="box accentbox">Marketing Cloud</div>
+    </div>
+  </div>
+  <p><b>Local variant</b> &mdash; runs on one person's laptop via Claude Desktop, session
+  lives in a local file. Nothing to host.<br>
+  <b>Remote variant</b> &mdash; one container, deployed to AWS, Google Cloud, or Azure,
+  shared by a team as an always-on Custom Connector.</p>
+  <div class="footer">
+    <span>Salesforce Cloud MCP Server</span>
+    <span>03</span>
+  </div>
+</div>
+
+<!-- PAGE 4: PERSONAS -->
+<div class="page">
+  <div class="tag">WHAT EACH TEAM GETS</div>
+  <h2>Built for the whole funnel, not one team's slice</h2>
+  <table class="persona-grid"><tr>
+    <td>
+    <div class="persona">
+      <h3>Sales</h3>
+      Pipeline by stage, top open deals, rolling forecast, lead triage &mdash; and logging
+      a call note straight back to Salesforce.
+      <div class="prompt">&ldquo;Summarize my pipeline by stage, then show me the 10 biggest open deals.&rdquo;</div>
+    </div>
+    </td>
+    <td>
+    <div class="persona">
+      <h3>PreSales</h3>
+      Full deal context before a call &mdash; contacts, quoted products &mdash; or the entire
+      account in one shot before a QBR.
+      <div class="prompt">&ldquo;Give me the account 360 for Acme Corp before my demo tomorrow.&rdquo;</div>
+    </div>
+    </td>
+  </tr><tr>
+    <td>
+    <div class="persona">
+      <h3>Marketing</h3>
+      Campaign ROI, cost-per-lead, member attendance, and which channels are actually
+      converting.
+      <div class="prompt">&ldquo;Which campaigns this quarter had the best ROI?&rdquo;</div>
+    </div>
+    </td>
+    <td>
+    <div class="persona">
+      <h3>Customer Success</h3>
+      Open cases by priority, upcoming renewals, and a best-effort at-risk view combining
+      both.
+      <div class="prompt">&ldquo;Which accounts are at risk in the next 60 days?&rdquo;</div>
+    </div>
+    </td>
+  </tr></table>
+  <p style="margin-top:24px;">Every tool is documented for what it's built on &mdash; standard
+  Salesforce fields where possible, with a clear note on where an org's custom fields
+  (health score, NPS, renewal risk) need one small addition. The project ships with a
+  contributor's guide for exactly that.</p>
+  <div class="footer">
+    <span>Salesforce Cloud MCP Server</span>
+    <span>04</span>
+  </div>
+</div>
+
+<!-- PAGE 5: TECH / ENGINEERING -->
+<div class="page">
+  <div class="tag">HOW IT'S BUILT</div>
+  <h2>Engineered to be extended, not just used</h2>
+  <ul class="clean">
+    <li><b>OAuth 2.0 Authorization Code + PKCE</b> for Sales/Service Cloud &mdash; a real
+    browser login, a refresh token, no hardcoded credentials anywhere in source.</li>
+    <li><b>A separate, correctly-scoped connection for Marketing Cloud</b> &mdash; it's a
+    genuinely different Salesforce product with its own API, and the code treats it
+    that way instead of pretending it's the same system.</li>
+    <li><b>One tool file per business function</b> (sales, presales, marketing, customer
+    success) sharing a single generic SOQL/REST client &mdash; adding a new tool never
+    touches auth or another team's file.</li>
+    <li><b>Read tools and one clearly-marked mutating tool</b>, with the convention
+    documented so anyone contributing keeps that split visible.</li>
+    <li><b>Two runnable entrypoints, one codebase</b> &mdash; a stdio process for local use,
+    a Streamable-HTTP service with a health check and access control for cloud
+    deployment, sharing every tool and client underneath.</li>
+    <li><b>MIT licensed</b>, with a contributor's guide, an environment template, and a
+    fictional demo dataset so anyone can try the tool shapes before connecting a real
+    org.</li>
+  </ul>
+  <div class="footer">
+    <span>Salesforce Cloud MCP Server</span>
+    <span>05</span>
+  </div>
+</div>
+
+<!-- PAGE 6: GETTING STARTED / CTA -->
+<div class="page">
+  <div class="tag">GET STARTED</div>
+  <h2>From a sandbox login to a live conversation</h2>
+  <div class="step"><div class="n">1</div><div class="t"><b>Spin up a Salesforce sandbox</b><span>Free Developer Edition &mdash; never start against production.</span></div></div>
+  <div class="step"><div class="n">2</div><div class="t"><b>Create a Connected App and authenticate once</b><span>A browser login, a refresh token saved locally &mdash; no server-side signup.</span></div></div>
+  <div class="step"><div class="n">3</div><div class="t"><b>Run it locally and try real prompts</b><span>Confirm your org's picklist values and custom fields match before scaling up.</span></div></div>
+  <div class="step"><div class="n">4</div><div class="t"><b>Move to production, containerize, deploy</b><span>AWS App Runner, Google Cloud Run, or Azure Container Apps &mdash; same steps, your choice of cloud.</span></div></div>
+  <div class="step"><div class="n">5</div><div class="t"><b>Connect it in Claude and share it out</b><span>One Custom Connector, tested with one person first, then rolled out to the team.</span></div></div>
+
+  <div class="cta">
+    <h2>Open source. MIT licensed. Built to be forked.</h2>
+    <p>Full source, setup guide, and contributor docs on GitHub.</p>
+    <p class="link">github.com/&lt;your-repo&gt;</p>
+    <p style="margin-top:18px;">Built by Mahesh Sane &mdash; connect on LinkedIn to talk Customer Success,
+    PreSales tooling, or what's next for this project.</p>
+  </div>
+  <div class="footer">
+    <span>Salesforce Cloud MCP Server</span>
+    <span>06</span>
+  </div>
+</div>
+
+</body>
+</html>

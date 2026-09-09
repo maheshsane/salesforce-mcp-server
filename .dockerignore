@@ -1,0 +1,8 @@
+.git
+.env
+.salesforce_token.json
+.mc_token.json
+__pycache__
+*.pyc
+.DS_Store
+.vscode

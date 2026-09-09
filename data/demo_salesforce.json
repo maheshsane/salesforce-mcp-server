@@ -1,0 +1,411 @@
+{
+  "accounts": [
+    {
+      "id": "ACC-001",
+      "name": "Meridian Medical Devices",
+      "industry": "Medical Devices",
+      "segment": "Strategic",
+      "arr": 320000,
+      "health_score": 42,
+      "csm": "Vincent Lai",
+      "renewal_date": "2026-09-15",
+      "last_csm_contact_days": 34,
+      "nps": 6,
+      "products": [
+        "ConnectAI",
+        "Sync"
+      ],
+      "region": "US"
+    },
+    {
+      "id": "ACC-002",
+      "name": "Vantage Life Sciences",
+      "industry": "Life Sciences",
+      "segment": "Strategic",
+      "arr": 450000,
+      "health_score": 58,
+      "csm": "Claudia Scheb",
+      "renewal_date": "2026-10-01",
+      "last_csm_contact_days": 18,
+      "nps": 7,
+      "products": [
+        "ConnectAI"
+      ],
+      "region": "US"
+    },
+    {
+      "id": "ACC-003",
+      "name": "Brightpath Software",
+      "industry": "Energy",
+      "segment": "Strategic",
+      "arr": 500000,
+      "health_score": 71,
+      "csm": "Greg Johnston",
+      "renewal_date": "2026-11-30",
+      "last_csm_contact_days": 7,
+      "nps": 8,
+      "products": [
+        "Sync",
+        "ARC"
+      ],
+      "region": "US"
+    },
+    {
+      "id": "ACC-004",
+      "name": "Cascade Energy Partners",
+      "industry": "Retail",
+      "segment": "Strategic",
+      "arr": 280000,
+      "health_score": 63,
+      "csm": "Kristin Moore",
+      "renewal_date": "2026-12-15",
+      "last_csm_contact_days": 12,
+      "nps": 8,
+      "products": [
+        "ConnectAI",
+        "Sync"
+      ],
+      "region": "US"
+    },
+    {
+      "id": "ACC-005",
+      "name": "Harborview Health Network",
+      "industry": "Healthcare / Education",
+      "segment": "Strategic",
+      "arr": 210000,
+      "health_score": 38,
+      "csm": "Mathis Corn",
+      "renewal_date": "2026-09-01",
+      "last_csm_contact_days": 45,
+      "nps": 5,
+      "products": [
+        "ConnectAI"
+      ],
+      "region": "US"
+    },
+    {
+      "id": "ACC-006",
+      "name": "Riverton County Services",
+      "industry": "Government",
+      "segment": "Growth",
+      "arr": 95000,
+      "health_score": 55,
+      "csm": "Vincent Lai",
+      "renewal_date": "2026-10-20",
+      "last_csm_contact_days": 22,
+      "nps": 7,
+      "products": [
+        "Sync"
+      ],
+      "region": "US"
+    },
+    {
+      "id": "ACC-007",
+      "name": "Northfield Apparel Group",
+      "industry": "Cybersecurity",
+      "segment": "Strategic",
+      "arr": 175000,
+      "health_score": 44,
+      "csm": "Claudia Scheb",
+      "renewal_date": "2026-09-30",
+      "last_csm_contact_days": 29,
+      "nps": 6,
+      "products": [
+        "ConnectAI",
+        "ARC"
+      ],
+      "region": "US"
+    },
+    {
+      "id": "ACC-008",
+      "name": "Lakeside University Medical Center",
+      "industry": "Nonprofit",
+      "segment": "Growth",
+      "arr": 48000,
+      "health_score": 72,
+      "csm": "Greg Johnston",
+      "renewal_date": "2027-01-15",
+      "last_csm_contact_days": 10,
+      "nps": 9,
+      "products": [
+        "Sync"
+      ],
+      "region": "US"
+    },
+    {
+      "id": "ACC-009",
+      "name": "Willowbrook Nonprofit Alliance",
+      "industry": "Software",
+      "segment": "Strategic",
+      "arr": 390000,
+      "health_score": 67,
+      "csm": "Kristin Moore",
+      "renewal_date": "2026-12-01",
+      "last_csm_contact_days": 9,
+      "nps": 8,
+      "products": [
+        "ConnectAI",
+        "Sync",
+        "ARC"
+      ],
+      "region": "US"
+    },
+    {
+      "id": "ACC-010",
+      "name": "Summit Retail Holdings",
+      "industry": "Government / Public Health",
+      "segment": "Growth",
+      "arr": 78000,
+      "health_score": 41,
+      "csm": "Mathis Corn",
+      "renewal_date": "2026-09-20",
+      "last_csm_contact_days": 38,
+      "nps": 5,
+      "products": [
+        "Sync"
+      ],
+      "region": "US"
+    }
+  ],
+  "opportunities": [
+    {
+      "id": "OPP-001",
+      "account_id": "ACC-001",
+      "account_name": "Stryker Corporation",
+      "type": "Renewal",
+      "amount": 320000,
+      "close_date": "2026-09-15",
+      "stage": "Renewal Risk",
+      "probability": 45,
+      "notes": "Champion left organization. New IT director unfamiliar with ConnectAI value."
+    },
+    {
+      "id": "OPP-002",
+      "account_id": "ACC-002",
+      "account_name": "IQVIA Holdings",
+      "type": "Renewal + Expansion",
+      "amount": 540000,
+      "close_date": "2026-10-01",
+      "stage": "Negotiation",
+      "probability": 70,
+      "notes": "Expansion into 2 new data domains. Legal review in progress."
+    },
+    {
+      "id": "OPP-003",
+      "account_id": "ACC-005",
+      "account_name": "Vanderbilt University Medical Center",
+      "type": "Renewal",
+      "amount": 210000,
+      "close_date": "2026-09-01",
+      "stage": "At Risk",
+      "probability": 30,
+      "notes": "Budget freeze cited. Evaluating open-source alternatives. Decision in 3 weeks."
+    },
+    {
+      "id": "OPP-004",
+      "account_id": "ACC-007",
+      "account_name": "Forcepoint",
+      "type": "Renewal",
+      "amount": 175000,
+      "close_date": "2026-09-30",
+      "stage": "Renewal Risk",
+      "probability": 50,
+      "notes": "3 unresolved support cases. Technical stakeholder frustrated with ARC performance."
+    },
+    {
+      "id": "OPP-005",
+      "account_id": "ACC-010",
+      "account_name": "Texas Department of Health Services",
+      "type": "Renewal",
+      "amount": 78000,
+      "close_date": "2026-09-20",
+      "stage": "At Risk",
+      "probability": 35,
+      "notes": "No contact in 38 days. Procurement cycle starting. Competitor outreach confirmed."
+    },
+    {
+      "id": "OPP-006",
+      "account_id": "ACC-003",
+      "account_name": "OneOk Inc",
+      "type": "Expansion",
+      "amount": 180000,
+      "close_date": "2026-11-30",
+      "stage": "Proposal",
+      "probability": 75,
+      "notes": "Pipeline expansion into ARC. Strong executive sponsor. POC successful."
+    },
+    {
+      "id": "OPP-007",
+      "account_id": "ACC-009",
+      "account_name": "Adobe Inc",
+      "type": "Renewal",
+      "amount": 390000,
+      "close_date": "2026-12-01",
+      "stage": "On Track",
+      "probability": 85,
+      "notes": "Strong NPS. Executive sponsor engaged. Multi-year discussion underway."
+    }
+  ],
+  "cases": [
+    {
+      "id": "CASE-001",
+      "account_id": "ACC-001",
+      "account_name": "Stryker Corporation",
+      "subject": "ConnectAI sync failure \u2014 production pipeline down",
+      "severity": "Critical",
+      "status": "Open",
+      "days_open": 4,
+      "description": "Nightly Salesforce sync job failing since Aug 7. Data pipeline blocked. No workaround in place."
+    },
+    {
+      "id": "CASE-002",
+      "account_id": "ACC-007",
+      "account_name": "Forcepoint",
+      "subject": "ARC performance degradation \u2014 latency 10x baseline",
+      "severity": "High",
+      "status": "Open",
+      "days_open": 11,
+      "description": "ARC API response times spiking to 8-12 seconds. Baseline is under 1 second. Impacting production workflows."
+    },
+    {
+      "id": "CASE-003",
+      "account_id": "ACC-007",
+      "account_name": "Forcepoint",
+      "subject": "Authentication token expiry not handled gracefully",
+      "severity": "Medium",
+      "status": "Open",
+      "days_open": 7,
+      "description": "OAuth token refresh fails silently. Users get logged out mid-session with no error message."
+    },
+    {
+      "id": "CASE-004",
+      "account_id": "ACC-007",
+      "account_name": "Forcepoint",
+      "subject": "Data mapping error on custom fields",
+      "severity": "Medium",
+      "status": "Pending Customer",
+      "days_open": 19,
+      "description": "Custom field values not mapping correctly from source schema. Requires customer to provide field mapping doc."
+    },
+    {
+      "id": "CASE-005",
+      "account_id": "ACC-005",
+      "account_name": "Vanderbilt University Medical Center",
+      "subject": "Onboarding stalled \u2014 integration config incomplete",
+      "severity": "High",
+      "status": "Open",
+      "days_open": 22,
+      "description": "ConnectAI onboarding incomplete after 22 days. Customer IT team unresponsive. Risk of failed implementation perception."
+    },
+    {
+      "id": "CASE-006",
+      "account_id": "ACC-010",
+      "account_name": "Texas Department of Health Services",
+      "subject": "Report export feature not working for CSV format",
+      "severity": "Low",
+      "status": "Open",
+      "days_open": 6,
+      "description": "CSV export producing malformed output. XLSX export works fine. Low urgency but blocking a reporting workflow."
+    }
+  ],
+  "gong_notes": [
+    {
+      "id": "GONG-001",
+      "account_id": "ACC-001",
+      "account_name": "Stryker Corporation",
+      "call_date": "2026-07-08",
+      "participants": "Vincent Lai (CSM), David Park (IT Director - new)",
+      "sentiment": "Negative",
+      "summary": "New IT director David Park unfamiliar with ConnectAI. Asked pointed questions about ROI and whether the platform could be replaced by internal tooling. Vincent struggled to quantify business value. Champion Sarah Chen has left the organization.",
+      "flags": [
+        "champion_loss",
+        "value_unclear",
+        "churn_risk"
+      ]
+    },
+    {
+      "id": "GONG-002",
+      "account_id": "ACC-002",
+      "account_name": "IQVIA Holdings",
+      "call_date": "2026-07-24",
+      "participants": "Claudia Scheb (CSM), Priya Nair (VP Data Engineering)",
+      "sentiment": "Positive",
+      "summary": "Strong call. Priya confirmed expansion into clinical trial data domain. Legal reviewing contract amendment. Claudia presented new ConnectAI features \u2014 well received. Renewal on track with expansion.",
+      "flags": [
+        "expansion_signal",
+        "executive_engaged"
+      ]
+    },
+    {
+      "id": "GONG-003",
+      "account_id": "ACC-005",
+      "account_name": "Vanderbilt University Medical Center",
+      "call_date": "2026-06-27",
+      "participants": "Mathis Corn (CSM), Dr. James Wu (CIO)",
+      "sentiment": "Negative",
+      "summary": "CIO expressed frustration with slow onboarding. IT team has not completed integration setup. Budget freeze likely. Dr. Wu mentioned evaluating open-source Airbyte as alternative. Decision expected within 3-4 weeks.",
+      "flags": [
+        "churn_risk",
+        "competitor_mentioned",
+        "budget_pressure",
+        "onboarding_stalled"
+      ]
+    },
+    {
+      "id": "GONG-004",
+      "account_id": "ACC-007",
+      "account_name": "Forcepoint",
+      "call_date": "2026-07-14",
+      "participants": "Claudia Scheb (CSM), Marcus Webb (Lead Engineer)",
+      "sentiment": "Negative",
+      "summary": "Marcus frustrated with 3 open support cases, particularly ARC latency issue. Stated the team is losing confidence in the platform. Claudia committed to engineering escalation by end of week \u2014 follow-up needed.",
+      "flags": [
+        "technical_frustration",
+        "churn_risk",
+        "escalation_committed"
+      ]
+    },
+    {
+      "id": "GONG-005",
+      "account_id": "ACC-003",
+      "account_name": "OneOk Inc",
+      "call_date": "2026-08-04",
+      "participants": "Greg Johnston (CSM), Rachel Kim (VP Operations)",
+      "sentiment": "Positive",
+      "summary": "Excellent call. POC for ARC expansion completed successfully. Rachel committed to internal budget approval by September. Strong executive sponsor. Greg to prepare commercial proposal.",
+      "flags": [
+        "expansion_signal",
+        "executive_engaged",
+        "poc_success"
+      ]
+    },
+    {
+      "id": "GONG-006",
+      "account_id": "ACC-010",
+      "account_name": "Texas Department of Health Services",
+      "call_date": "2026-07-04",
+      "participants": "Mathis Corn (CSM), Linda Torres (IT Manager)",
+      "sentiment": "Neutral",
+      "summary": "Routine check-in. Linda mentioned state procurement cycle starting in September. Noted a competing vendor reached out last week. No urgency expressed but Mathis has not followed up since this call \u2014 38 days ago.",
+      "flags": [
+        "competitor_mentioned",
+        "procurement_cycle",
+        "follow_up_overdue"
+      ]
+    },
+    {
+      "id": "GONG-007",
+      "account_id": "ACC-009",
+      "account_name": "Adobe Inc",
+      "call_date": "2026-08-01",
+      "participants": "Kristin Moore (CSM), Tom Bradley (SVP Engineering)",
+      "sentiment": "Positive",
+      "summary": "Strong executive relationship. Tom interested in multi-year deal. Kristin to prepare 3-year proposal with volume discount. NPS 8 confirmed. No open issues.",
+      "flags": [
+        "expansion_signal",
+        "executive_engaged",
+        "multi_year_interest"
+      ]
+    }
+  ]
+}
