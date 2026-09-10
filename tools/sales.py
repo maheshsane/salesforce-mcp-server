@@ -133,3 +133,62 @@ def sf_log_activity_note(related_id: str, subject: str, notes: str = "") -> str:
         )
     result = sf_client.create("Task", task)
     return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def sf_update_opportunity(
+    opportunity_id: str,
+    stage: str = "",
+    amount: float = 0,
+    close_date: str = "",
+    next_step: str = "",
+) -> str:
+    """
+    MUTATING — updates an existing Opportunity. Only pass the fields
+    you actually want changed; everything else on the record is left
+    alone. close_date must be 'YYYY-MM-DD' if provided. Use
+    sf_describe_object("Opportunity") first if you're unsure of this
+    org's exact StageName picklist values — an invalid stage name will
+    fail rather than silently guess the closest match.
+    """
+    fields = {}
+    if stage:
+        fields["StageName"] = stage
+    if amount:
+        fields["Amount"] = amount
+    if close_date:
+        fields["CloseDate"] = close_date
+    if next_step:
+        fields["NextStep"] = next_step
+    if not fields:
+        return json.dumps({"error": "No fields provided to update."})
+    sf_client.update("Opportunity", opportunity_id, fields)
+    return json.dumps({"updated": opportunity_id, "fields": fields}, indent=2)
+
+
+@mcp.tool()
+def sf_delete_task(task_id: str) -> str:
+    """
+    MUTATING, DESTRUCTIVE — deletes a Task (e.g. one created in error
+    by sf_log_activity_note). Salesforce moves it to the Recycle Bin
+    rather than erasing it immediately (recoverable for about 15 days
+    under default org settings). Only Task deletion is exposed here —
+    deleting Accounts, Opportunities, Cases, or Contacts is
+    deliberately not built into this server; see CONTRIBUTING.md if
+    you want to add that yourself, with the risk that implies.
+    """
+    sf_client.delete("Task", task_id)
+    return json.dumps({"deleted": task_id, "object": "Task"}, indent=2)
+
+
+@mcp.tool()
+def sf_delete_lead(lead_id: str) -> str:
+    """
+    MUTATING, DESTRUCTIVE — deletes a Lead (e.g. a duplicate or
+    clearly invalid inbound lead). Salesforce moves it to the Recycle
+    Bin rather than erasing it immediately (recoverable for about 15
+    days under default org settings). Use sf_get_leads first to
+    confirm you have the right record before deleting it.
+    """
+    sf_client.delete("Lead", lead_id)
+    return json.dumps({"deleted": lead_id, "object": "Lead"}, indent=2)

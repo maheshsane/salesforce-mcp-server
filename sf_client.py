@@ -99,6 +99,34 @@ def create(object_name: str, fields: dict) -> dict:
     )
 
 
+def update(object_name: str, record_id: str, fields: dict) -> None:
+    """
+    Updates specific fields on an existing record (PATCH) — only the
+    fields you pass are changed; anything else on the record is left
+    alone. Salesforce returns no body on success (204), so this
+    function returns None; a non-2xx status raises SalesforceError.
+    """
+    _request(
+        "PATCH",
+        f"/services/data/{API_VERSION}/sobjects/{object_name}/{record_id}",
+        json=fields,
+    )
+
+
+def delete(object_name: str, record_id: str) -> None:
+    """
+    Deletes a record. Salesforce moves deleted records to the Recycle
+    Bin rather than erasing them immediately — recoverable for about
+    15 days under default org settings, permanently gone after that or
+    if the bin is emptied manually. Returns None on success (204); a
+    non-2xx status raises SalesforceError.
+    """
+    _request(
+        "DELETE",
+        f"/services/data/{API_VERSION}/sobjects/{object_name}/{record_id}",
+    )
+
+
 def list_objects() -> list[dict]:
     """Returns every object (standard and custom) queryable in this org."""
     data = _request("GET", f"/services/data/{API_VERSION}/sobjects/")

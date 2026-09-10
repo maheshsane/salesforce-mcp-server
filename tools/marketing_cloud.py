@@ -41,3 +41,28 @@ def mc_list_journeys(page: int = 1) -> str:
     PreSales/CS account activity in core Salesforce.
     """
     return json.dumps(mc_client.list_journeys(page=page), indent=2)
+
+
+@mcp.tool()
+def mc_upsert_data_extension_rows(customer_key: str, primary_key_fields: list[str], rows: list[dict]) -> str:
+    """
+    MUTATING — inserts or updates rows in a Marketing Cloud Data
+    Extension. Existing rows are matched on primary_key_fields, which
+    must match the Data Extension's actual configured primary key
+    column(s) — find those via the DE's setup page if unsure; getting
+    this wrong either fails the call or silently inserts duplicates
+    instead of updating. Each row is a full dict of column name to
+    value, including the primary key columns. Keep batches to roughly
+    50 rows / 50 columns per call.
+
+    There's no row-level delete tool to pair with this — Marketing
+    Cloud's REST API doesn't expose one (see mc_client.py for why).
+
+    Example: adding someone to a list-style Data Extension, or
+    updating a status field a journey's entry criteria will pick up.
+      customer_key="Subscribers_2026"
+      primary_key_fields=["SubscriberKey"]
+      rows=[{"SubscriberKey": "12345", "Status": "Active", "Segment": "VIP"}]
+    """
+    result = mc_client.upsert_data_extension_rows(customer_key, primary_key_fields, rows)
+    return json.dumps(result, indent=2)

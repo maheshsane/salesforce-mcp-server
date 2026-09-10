@@ -1,6 +1,9 @@
 """
-Customer Success tools — support load, renewals, and churn-risk
-signals, built on standard Case/Opportunity fields.
+Customer Success tools — renewals, churn-risk signals, and account
+health, built on standard Case/Opportunity fields. This is the
+relationship-management side of post-sale work ("who's about to
+churn, what's renewing"), distinct from Support's queue-handling side
+("what's open right now") — see tools/support.py for that.
 """
 
 import json
@@ -8,26 +11,6 @@ from collections import defaultdict
 
 import sf_client
 from mcp_instance import mcp
-
-
-@mcp.tool()
-def sf_get_open_cases(priority: str = "") -> str:
-    """
-    Retrieve open support Cases with priority, subject, and account.
-    Optionally filter by Priority ('High', 'Medium', 'Low', or whatever
-    values this org's picklist uses — check with sf_describe_object if
-    unsure).
-    """
-    conditions = ["IsClosed = false"]
-    if priority:
-        conditions.append(f"Priority = '{priority}'")
-    soql = (
-        "SELECT Id, CaseNumber, Subject, AccountId, Account.Name, Priority, "
-        "Status, CreatedDate, Description FROM Case WHERE "
-        + " AND ".join(conditions)
-        + " ORDER BY CreatedDate ASC LIMIT 200"
-    )
-    return json.dumps(sf_client.query(soql), indent=2)
 
 
 @mcp.tool()

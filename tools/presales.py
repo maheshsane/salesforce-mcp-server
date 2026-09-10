@@ -92,3 +92,46 @@ def sf_get_account_360(account_id: str) -> str:
     result["contacts"] = contacts
     result["recent_activity"] = recent_activity
     return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def sf_create_contact(account_id: str, first_name: str, last_name: str, email: str = "", title: str = "") -> str:
+    """
+    MUTATING — creates a new Contact under an Account. Use this to add
+    a stakeholder you've identified on a deal (e.g. a new champion or
+    technical evaluator) without leaving the conversation. Returns the
+    new Contact Id.
+    """
+    contact = {
+        "AccountId": account_id,
+        "FirstName": first_name,
+        "LastName": last_name,
+        "Email": email,
+        "Title": title,
+    }
+    result = sf_client.create("Contact", contact)
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+def sf_update_contact(contact_id: str, title: str = "", email: str = "", phone: str = "") -> str:
+    """
+    MUTATING — updates an existing Contact's title, email, or phone.
+    Only pass the fields you actually want changed. Useful when a
+    stakeholder changes roles, or you learn their correct contact
+    details mid-conversation. To rename a contact or move them to a
+    different Account, use sf_query to confirm the exact field names
+    first — those are less common edits and this tool deliberately
+    only covers the fields people actually update in practice.
+    """
+    fields = {}
+    if title:
+        fields["Title"] = title
+    if email:
+        fields["Email"] = email
+    if phone:
+        fields["Phone"] = phone
+    if not fields:
+        return json.dumps({"error": "No fields provided to update."})
+    sf_client.update("Contact", contact_id, fields)
+    return json.dumps({"updated": contact_id, "fields": fields}, indent=2)

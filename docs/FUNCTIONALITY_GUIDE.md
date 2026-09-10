@@ -23,9 +23,11 @@ Once connected, a rep or sales manager can ask Claude things like:
 - **"What are my 10 biggest open deals?"** → `sf_get_top_deals` ranks by amount, with owner and close date, so a manager can ask this about the whole team just by not filtering to themselves.
 - **"What's likely to close this month?"** → `sf_get_forecast` returns everything closing in the window you ask for.
 - **"Which new leads came in from webinars this week, and are any of them still unworked?"** → `sf_get_leads` filters by source and status.
-- **"Log a note on the Acme deal — they want a second demo before signing."** → `sf_log_activity_note` writes that back to Salesforce as a Task, so it shows up for anyone else looking at the deal. This is the one tool in the whole server that writes data rather than just reading it.
+- **"Log a note on the Acme deal — they want a second demo before signing."** → `sf_log_activity_note` writes that back to Salesforce as a Task, so it shows up for anyone else looking at the deal.
+- **"Update the Acme opportunity to Negotiation stage."** → `sf_update_opportunity` changes just the fields you name (stage, amount, close date, next step) — everything else on the record is left untouched.
+- **"That lead looks like a duplicate, delete it."** → `sf_delete_lead` removes it (recoverable from Salesforce's Recycle Bin for about 15 days if it turns out to be wrong).
 
-**What this replaces:** pulling a report, exporting to a spreadsheet, or tabbing over to Salesforce mid-conversation to check a number. The rep stays in the conversation they're already having.
+**What this replaces:** pulling a report, exporting to a spreadsheet, or tabbing over to Salesforce mid-conversation to check a number — or to make a small update. The rep stays in the conversation they're already having.
 
 **Where it falls short:** there's no forecast *category* rollup (Salesforce's Commit/Best Case/Pipeline classification) because that's a metadata concept, not a plain field — `sf_get_forecast` gives you the raw deals in the window and lets Claude do the summarizing instead.
 
@@ -34,6 +36,8 @@ Once connected, a rep or sales manager can ask Claude things like:
 - **"Give me everything on the Acme Corp deal before my call tomorrow."** → `sf_get_opportunity_detail` returns stage, next steps, and — critically — who's actually involved on the customer side (`OpportunityContactRole`), so you're not walking in blind on who's the champion versus who's evaluating.
 - **"What's actually being quoted?"** → `sf_get_opportunity_products` lists the line items — product, quantity, price — so your demo matches what's on the table instead of a generic walkthrough.
 - **"Give me the full picture on this account before the QBR."** → `sf_get_account_360` is the one to reach for when you want everything in one shot: account details, every open deal, every open case, every contact, and the last 10 logged activities. This is the tool built specifically so you don't have to make five separate asks.
+- **"I just talked to their new VP of Ops — add her as a contact."** → `sf_create_contact` adds a new stakeholder to the account without switching tabs.
+- **"They just changed roles — update their title on the account."** → `sf_update_contact` changes title, email, or phone, only what you name.
 
 **What this replaces:** the 15 minutes before a call spent clicking through Salesforce tabs to reconstruct context that's scattered across the Opportunity, its related lists, and whatever Cases happen to be open.
 
@@ -49,9 +53,23 @@ Once connected, a rep or sales manager can ask Claude things like:
 
 **Where it falls short:** these tools only see Campaigns and CampaignMembers *in core Salesforce*. If your team runs marketing almost entirely out of Marketing Cloud Journeys and Data Extensions, `sf_get_campaigns` will look thin — that's expected, not a bug — use `mc_list_data_extensions`/`mc_list_journeys` instead, once that connection is set up.
 
-### Customer Success
+### Support
+
+Support and Customer Success are different jobs even though they
+share the Case object — Support answers "what's open right now,"
+Customer Success answers "who's about to churn." Split into separate
+tools deliberately for that reason.
 
 - **"Pull all open cases by priority."** → `sf_get_open_cases`, the thing you'd otherwise check first thing every morning.
+- **"Open a case for the outage they just reported."** → `sf_create_case` logs it directly, with a subject, description, and priority.
+- **"Mark that case resolved and drop the priority."** → `sf_update_case` changes status/priority/description — only what you name, everything else on the record stays as-is.
+
+**What this replaces:** the morning queue triage, and the habit of switching to Salesforce every time a case needs a status update mid-conversation.
+
+**Where it falls short:** there's no SLA-timer or escalation-rule awareness — these tools see Case fields, not the automation built on top of them. If your org tracks time-to-first-response or breach status on a custom field, describe the Case object to find it and query directly.
+
+### Customer Success
+
 - **"What's renewing in the next 60 days?"** → `sf_get_renewals_due`.
 - **"Which accounts are at risk?"** → `sf_get_at_risk_accounts` cross-references low-probability, near-term renewal Opportunities with open High/Critical cases on the same account, and ranks by deal size — the weekly prioritization exercise, done in one call instead of two reports stitched together by hand.
 - **"Give me a fast health check on this account before I call them."** → `sf_get_account_health` — lighter than the full 360, good for a quick gut-check between calls.
@@ -62,14 +80,44 @@ Once connected, a rep or sales manager can ask Claude things like:
 
 ### Cross-functional
 
-The honest answer to "who is this actually for" is: whoever needs the full picture, not just their function's slice of it. `sf_get_account_360` doesn't care whether you're in Sales, PreSales, or CS — it returns the same account, opportunities, cases, contacts, and activity regardless of who asks. The value of one MCP server instead of four separate dashboards is that a CS manager prepping for a QBR and an AE prepping for an upsell conversation are asking the exact same question about the exact same account, and get the exact same underlying data, in one place, no login-switching required.
+The honest answer to "who is this actually for" is: whoever needs the full picture, not just their function's slice of it. `sf_get_account_360` doesn't care whether you're in Sales, PreSales, Support, or CS — it returns the same account, opportunities, cases, contacts, and activity regardless of who asks. The value of one MCP server instead of five separate dashboards is that a CS manager prepping for a QBR and a support agent triaging a ticket are asking questions about the exact same account, and get the exact same underlying data, in one place, no login-switching required.
+
+**One thing worth being explicit about, since the sections above are organized by function:** that organization is documentation, not access control. Every tool in this server is available in every conversation, regardless of which section above it's filed under. A Customer Success person can call `sf_create_case` (filed under Support) or `sf_update_contact` (filed under PreSales) just as easily as a support agent or an AE can — nothing gates a tool to "its" function. The sections exist to help you find the tool that matches what you're usually doing, not to restrict what you're allowed to ask for.
+
+### Data 360 (formerly Data Cloud)
+
+- **"Is this person in our VIP segment?"** → `dc_query` runs SQL against Data 360's unified profile objects — including segment membership, which turns out to be just a regular queryable object (a Data Model Object Data 360 auto-generates every time a segment publishes), not a separate feature you need new access for.
+- **"Who dropped out of the loyalty segment since the last publish?"** → same tool, querying the segment's history object for records with `Delta_Type__c = 'Removed'`.
+
+**What this replaces:** exporting a segment to check who's in it, or asking a Data 360 admin to run a query for you.
+
+**Where it falls short:** there's no describe-style tool yet for finding exact Data 360 object/field names for your org — that's still a Data 360 Setup UI lookup. And this only reads; Data 360 itself doesn't support editing individual records the way Salesforce does (see Part 2's CRUD note below for why).
 
 ### Marketing Cloud (only if you've connected it)
 
 - `mc_list_data_extensions` / `mc_query_data_extension` — read subscriber or engagement data straight out of a Data Extension.
 - `mc_list_journeys` — see what automated journeys exist, so you can ask Claude to cross-reference "who's currently in a nurture journey" against "who has an open Opportunity in core Salesforce."
+- **"Add this person to the newsletter Data Extension."** → `mc_upsert_data_extension_rows` inserts or updates rows — there's no matching delete tool, Marketing Cloud's REST API doesn't cleanly expose one for a single row (see `mc_client.py` for why).
 
 This is a genuinely separate product with its own login and its own data model — it doesn't know anything about your Salesforce Accounts unless you explicitly ask Claude to join the two by hand (e.g. "list journeys, then check which of these email addresses also have Opportunities in Negotiation").
+
+---
+
+## What's read-only vs. writable, and why that's not symmetric
+
+Salesforce (Sales/Service Cloud) supports genuine create/update/delete
+— but only specific, narrow, named operations are exposed as tools
+(update an Opportunity's stage, not "update anything"), deliberately,
+so the blast radius of what Claude can change stays predictable.
+Account, Opportunity, Case, and Contact *deletion* aren't exposed at
+all — those are higher-stakes records than a Task or a duplicate
+Lead. Marketing Cloud supports inserting/updating Data Extension rows
+but not deleting a single row through any clean REST endpoint. Data
+360 is read-only by the platform's own design — data arrives through
+ingestion pipelines, not row edits. None of this is a gap to route
+around; see `README.md`'s "What's read-only vs. writable" section for
+the full reasoning, and test any mutating tool against a sandbox org
+before production, same as everything else in Part 2 below.
 
 ---
 

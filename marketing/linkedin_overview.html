@@ -95,6 +95,54 @@
   .persona ul.mini li { font-size: 13.5px; color: #3a4356; margin-bottom: 6px; line-height: 1.45; }
   .persona .prompt { margin-top: 10px; }
   .persona .prompt div { margin-bottom: 6px; }
+
+  .quickref-grid { width: 100%; border-collapse: separate; border-spacing: 18px 18px; margin-top: 6px; }
+  .quickref-grid td { width: 50%; vertical-align: top; padding: 0; }
+  .quickref-card {
+    background: #f5f7fb; border-radius: 10px; padding: 16px 18px;
+  }
+  .quickref-card h3 { font-size: 15px; margin: 0 0 10px 0; color: #0b1730; }
+  .quickref-card .try-line {
+    font-size: 13px; color: #2b3550; background: white;
+    padding: 8px 10px 8px 13px; margin-bottom: 8px;
+  }
+
+  .combo-card {
+    background: #f5f7fb; border-radius: 12px; padding: 18px 22px; margin-bottom: 16px;
+  }
+  .combo-card .ask {
+    font-size: 14.5px; font-style: italic; color: #1a2233; margin-bottom: 10px;
+  }
+  .combo-chain { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+  .combo-chain .label { font-size: 11px; color: #8993ab; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 4px; }
+  .tool-badge {
+    background: #0b1730; color: #cfe0ff; font-size: 11.5px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px;
+  }
+  .combo-chain .arrow-sep { color: #b7c0d6; font-size: 13px; }
+
+  .visual-tag {
+    background: #e1f5ee; color: #0f6e56; font-size: 11px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px; margin-left: 8px;
+  }
+
+  .toollist-grid { width: 100%; border-collapse: separate; border-spacing: 0 0; margin-top: 8px; }
+  .toollist-grid td { width: 50%; vertical-align: top; padding: 0 14px 0 0; }
+  .toollist-cat { margin-bottom: 13px; }
+  .toollist-cat h4 {
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: #7b859c; margin: 0 0 5px 0; border-bottom: 1px solid #e7ebf3; padding-bottom: 3px;
+  }
+  .tool-row {
+    font-size: 12px; color: #232c40; padding: 2.5px 0;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .tool-row .name { font-family: 'SFMono-Regular', Menlo, Consolas, monospace; font-size: 11.5px; }
+  .write-tag {
+    background: #fff1de; color: #a3550a; font-size: 8.5px; font-weight: 800;
+    padding: 2px 6px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.4px;
+    flex-shrink: 0; margin-left: 8px;
+  }
   .persona {
     background: #f5f7fb; border-left: 4px solid #0b5fff; border-radius: 8px;
     padding: 18px 20px;
@@ -134,37 +182,41 @@
 <div class="page cover">
   <div class="tag">BUILT ON CLAUDE, CONNECTED TO SALESFORCE</div>
   <h1>Stop building reports.<br>Start asking questions.</h1>
-  <p class="sub">An open-source AI layer that gives Sales, PreSales, Marketing, and<br>
-  Customer Success real answers from live Salesforce data &mdash; in one conversation.</p>
+  <p class="sub">An open-source AI layer that gives Sales, PreSales, Marketing,<br>
+  Support, and Customer Success real answers from live Salesforce data &mdash; in one conversation.</p>
   <div class="cover-stat-row">
-    <div class="cover-stat"><div class="num">4</div><div class="label">functions unified</div></div>
-    <div class="cover-stat"><div class="num">23</div><div class="label">ready-made questions answered instantly</div></div>
-    <div class="cover-stat"><div class="num">0</div><div class="label">dashboards to check every morning</div></div>
+    <div class="cover-stat"><div class="num">5</div><div class="label">business functions unified</div></div>
+    <div class="cover-stat"><div class="num">32</div><div class="label">ready-made tools to start with &mdash; fork it, add your own</div></div>
+    <div class="cover-stat"><div class="num">0</div><div class="label">standing dashboards to build and maintain &mdash; just ask</div></div>
   </div>
 
   <div class="cover-diagram">
     <svg width="100%" height="100%" viewBox="0 0 848 635" preserveAspectRatio="xMidYMid meet">
-      <line x1="424" y1="317" x2="180" y2="120" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
-      <line x1="424" y1="317" x2="668" y2="120" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
-      <line x1="424" y1="317" x2="180" y2="515" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
-      <line x1="424" y1="317" x2="668" y2="515" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+      <line x1="424" y1="317" x2="424" y2="97" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+      <line x1="424" y1="317" x2="633" y2="249" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+      <line x1="424" y1="317" x2="553" y2="495" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+      <line x1="424" y1="317" x2="295" y2="495" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
+      <line x1="424" y1="317" x2="215" y2="249" stroke="rgba(255,255,255,0.22)" stroke-width="2"/>
 
       <circle cx="424" cy="317" r="58" fill="rgba(255,255,255,0.09)" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
       <text x="424" y="312" text-anchor="middle" fill="#ffffff" font-size="18" font-weight="700" font-family="Helvetica Neue, Arial, sans-serif">One</text>
       <text x="424" y="333" text-anchor="middle" fill="#ffffff" font-size="18" font-weight="700" font-family="Helvetica Neue, Arial, sans-serif">Conversation</text>
 
-      <circle cx="180" cy="120" r="42" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-      <text x="180" y="125" text-anchor="middle" fill="#eaf0ff" font-size="15" font-weight="600" font-family="Helvetica Neue, Arial, sans-serif">Sales</text>
+      <circle cx="424" cy="97" r="42" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <text x="424" y="102" text-anchor="middle" fill="#eaf0ff" font-size="15" font-weight="600" font-family="Helvetica Neue, Arial, sans-serif">Sales</text>
 
-      <circle cx="668" cy="120" r="42" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-      <text x="668" y="118" text-anchor="middle" fill="#eaf0ff" font-size="15" font-weight="600" font-family="Helvetica Neue, Arial, sans-serif">PreSales</text>
+      <circle cx="633" cy="249" r="42" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <text x="633" y="254" text-anchor="middle" fill="#eaf0ff" font-size="14" font-weight="600" font-family="Helvetica Neue, Arial, sans-serif">PreSales</text>
 
-      <circle cx="180" cy="515" r="42" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-      <text x="180" y="513" text-anchor="middle" fill="#eaf0ff" font-size="15" font-weight="600" font-family="Helvetica Neue, Arial, sans-serif">Marketing</text>
+      <circle cx="553" cy="495" r="42" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <text x="553" y="500" text-anchor="middle" fill="#eaf0ff" font-size="14" font-weight="600" font-family="Helvetica Neue, Arial, sans-serif">Marketing</text>
 
-      <circle cx="668" cy="515" r="42" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-      <text x="668" y="510" text-anchor="middle" fill="#eaf0ff" font-size="14" font-weight="600" font-family="Helvetica Neue, Arial, sans-serif">Customer</text>
-      <text x="668" y="527" text-anchor="middle" fill="#eaf0ff" font-size="14" font-weight="600" font-family="Helvetica Neue, Arial, sans-serif">Success</text>
+      <circle cx="295" cy="495" r="42" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <text x="295" y="500" text-anchor="middle" fill="#eaf0ff" font-size="14" font-weight="600" font-family="Helvetica Neue, Arial, sans-serif">Support</text>
+
+      <circle cx="215" cy="249" r="42" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <text x="215" y="245" text-anchor="middle" fill="#eaf0ff" font-size="13" font-weight="600" font-family="Helvetica Neue, Arial, sans-serif">Customer</text>
+      <text x="215" y="261" text-anchor="middle" fill="#eaf0ff" font-size="13" font-weight="600" font-family="Helvetica Neue, Arial, sans-serif">Success</text>
     </svg>
   </div>
   <div class="cover-meta">
@@ -182,17 +234,18 @@
 <!-- PAGE 2: PROBLEM -->
 <div class="page">
   <div class="tag">THE PROBLEM</div>
-  <h2>Four teams, four dashboards, one customer</h2>
+  <h2>Five teams, five dashboards, one customer</h2>
   <p>A Sales rep checks pipeline in one report. PreSales pulls deal detail from another
-  tab. Marketing builds a campaign ROI dashboard. Customer Success cross-references
-  renewal and case reports by hand every Monday morning. All four are describing the
-  same underlying Salesforce org &mdash; just through different, disconnected views of it.</p>
+  tab. Marketing builds a campaign ROI dashboard. Support triages a case queue. Customer
+  Success cross-references renewal and case reports by hand every Monday morning. All
+  five are describing the same underlying Salesforce org &mdash; just through different,
+  disconnected views of it.</p>
   <p>Every one of those views takes a login, a click path, and a mental switch away from
   the actual conversation someone's trying to have &mdash; with a customer, a manager,
   or a teammate.</p>
   <div class="stat-row">
-    <div class="stat"><div class="num">4</div><div class="label">functions this serves &mdash; Sales, PreSales, Marketing, CS</div></div>
-    <div class="stat"><div class="num">23</div><div class="label">ready-made tools across those functions</div></div>
+    <div class="stat"><div class="num">5</div><div class="label">functions this serves &mdash; Sales, PreSales, Marketing, Support, CS</div></div>
+    <div class="stat"><div class="num">32</div><div class="label">ready-made tools across those functions</div></div>
     <div class="stat"><div class="num">1</div><div class="label">conversation to get any of them an answer</div></div>
   </div>
   <p>This project asks a simple question: what if the CRM answered you directly, in
@@ -221,11 +274,15 @@
       <div class="box">Sales tools</div>
       <div class="box">PreSales tools</div>
       <div class="box">Marketing tools</div>
+    </div>
+    <div class="row" style="margin-top:10px;">
+      <div class="box">Support tools</div>
       <div class="box">CS tools</div>
+      <div class="box">Data 360 tools</div>
     </div>
     <div class="arrow">&#8595;&#8593;&nbsp; OAuth 2.0</div>
     <div class="row">
-      <div class="box accentbox">Sales / Service Cloud</div>
+      <div class="box accentbox">Sales / Service Cloud<br><span style="font-weight:400;font-size:11px;">+ Data 360</span></div>
       <div class="box accentbox">Marketing Cloud</div>
     </div>
   </div>
@@ -257,6 +314,7 @@
       <div class="prompt">
         <div>&ldquo;Summarize my pipeline by stage, then show me the 10 biggest open deals.&rdquo;</div>
         <div>&ldquo;What's likely to close this month?&rdquo;</div>
+        <div>&ldquo;Log a note on the Acme deal &mdash; they want a second demo before signing.&rdquo; <span class="write-tag">write</span></div>
       </div>
     </div>
     </td>
@@ -271,6 +329,7 @@
       <div class="prompt">
         <div>&ldquo;Give me everything on the Acme deal before tomorrow's call.&rdquo;</div>
         <div>&ldquo;What's actually being quoted on this opportunity?&rdquo;</div>
+        <div>&ldquo;Add their new VP of Ops as a contact on this account.&rdquo; <span class="write-tag">write</span></div>
       </div>
     </div>
     </td>
@@ -281,10 +340,10 @@
   </div>
 </div>
 
-<!-- PAGE 5: MARKETING & CS IN PRACTICE -->
+<!-- PAGE 5: MARKETING & SUPPORT IN PRACTICE -->
 <div class="page">
-  <div class="tag">WHAT YOU CAN ACTUALLY ASK &mdash; MARKETING &amp; CUSTOMER SUCCESS</div>
-  <h2>The same server, two more functions</h2>
+  <div class="tag">WHAT YOU CAN ACTUALLY ASK &mdash; MARKETING &amp; SUPPORT</div>
+  <h2>Top of funnel, and the queue that never stops</h2>
   <table class="persona-grid"><tr>
     <td>
     <div class="persona">
@@ -302,14 +361,45 @@
     </td>
     <td>
     <div class="persona">
+      <h3>Support</h3>
+      <ul class="mini">
+        <li>Open cases by priority &mdash; the queue check, first thing every morning</li>
+        <li>Open a new case directly from the conversation, subject and priority included</li>
+        <li>Resolve, escalate, or annotate an existing case without switching tabs</li>
+      </ul>
+      <div class="prompt">
+        <div>&ldquo;What's open right now by priority?&rdquo;</div>
+        <div>&ldquo;Open a case for the outage they just reported, mark it Critical.&rdquo; <span class="write-tag">write</span></div>
+        <div>&ldquo;Mark that case resolved.&rdquo; <span class="write-tag">write</span></div>
+      </div>
+    </div>
+    </td>
+  </tr></table>
+  <div class="footer">
+    <span>Salesforce Cloud MCP Server</span>
+    <span>05</span>
+  </div>
+</div>
+
+<!-- PAGE 6: CUSTOMER SUCCESS IN PRACTICE -->
+<div class="page">
+  <div class="tag">WHAT YOU CAN ACTUALLY ASK &mdash; CUSTOMER SUCCESS</div>
+  <h2>The relationship side, not the ticket side</h2>
+  <p>Support answers "what's open right now." Customer Success answers
+  "who's about to churn." Different job, different tools &mdash; even
+  though both live on the same Case object underneath.</p>
+  <table class="persona-grid single"><tr>
+    <td>
+    <div class="persona">
       <h3>Customer Success</h3>
       <ul class="mini">
-        <li>Open cases by priority, the first thing to check every morning</li>
-        <li>What's renewing in the next 60 days, or whatever window matters</li>
-        <li>At risk accounts &mdash; low probability renewals cross referenced with open high priority cases, ranked by deal size</li>
+        <li>Open renewals in any window you name &mdash; this quarter, next 60 days, whatever matters</li>
+        <li>At-risk accounts &mdash; low-probability renewals cross-referenced with open high-priority cases, ranked by deal size, so you know who to call first</li>
+        <li>A fast health check on one account &mdash; case load, last logged activity, open opportunities &mdash; before you pick up the phone</li>
       </ul>
       <div class="prompt">
         <div>&ldquo;Which accounts are at risk in the next 60 days?&rdquo;</div>
+        <div>&ldquo;What's renewing this quarter?&rdquo;</div>
         <div>&ldquo;Give me a fast health check on this account before I call them.&rdquo;</div>
       </div>
     </div>
@@ -319,14 +409,327 @@
   Salesforce fields where possible, with a clear note on where an org's custom fields
   (health score, NPS, renewal risk) need one small addition. The project ships with a
   contributor's guide for exactly that.</p>
+  <p style="margin-top:10px; font-size:13px; color:var(--text-secondary, #55607a);">One thing worth
+  being explicit about: the function pages in this deck are organizational, not a permission
+  boundary. A Customer Success person can call Support's <code>sf_create_case</code> or PreSales'
+  <code>sf_update_contact</code> just as easily &mdash; every tool is available in every conversation.</p>
   <div class="footer">
     <span>Salesforce Cloud MCP Server</span>
-    <span>05</span>
+    <span>06</span>
   </div>
 </div>
 
 
-<!-- PAGE 6: TECH / ENGINEERING -->
+<!-- PAGE 7: TRY IT -- QUICK REFERENCE -->
+<div class="page">
+  <div class="tag">TRY IT &mdash; JUST TYPE THESE</div>
+  <h2>You don't need to learn a query language</h2>
+  <p>Every one of these is something you can type into Claude exactly as
+  written. Claude figures out which tool to call and how to phrase the
+  query underneath &mdash; you just ask the question the way you'd ask a
+  colleague.</p>
+  <table class="quickref-grid"><tr>
+    <td>
+    <div class="quickref-card">
+      <h3>Sales</h3>
+      <div class="try-line">"What's my pipeline look like by stage?"</div>
+      <div class="try-line">"What's likely to close in the next 30 days?"</div>
+      <div class="try-line">"Log a note on the Acme deal &mdash; they want a second demo." <span class="write-tag">write</span></div>
+    </div>
+    </td>
+    <td>
+    <div class="quickref-card">
+      <h3>PreSales</h3>
+      <div class="try-line">"Give me everything on the Acme deal before my call."</div>
+      <div class="try-line">"Pull the full account picture for Acme Corp."</div>
+      <div class="try-line">"Add their new VP of Ops as a contact on this account." <span class="write-tag">write</span></div>
+    </div>
+    </td>
+  </tr><tr>
+    <td>
+    <div class="quickref-card">
+      <h3>Marketing</h3>
+      <div class="try-line">"Which campaigns had the best ROI this quarter?"</div>
+      <div class="try-line">"Who attended our last webinar, and who converted?"</div>
+      <div class="try-line">"Which lead source is converting best right now?"</div>
+    </div>
+    </td>
+    <td>
+    <div class="quickref-card">
+      <h3>Support</h3>
+      <div class="try-line">"What's open right now by priority?"</div>
+      <div class="try-line">"Open a case for the outage they just reported, mark it Critical." <span class="write-tag">write</span></div>
+      <div class="try-line">"Mark that case resolved." <span class="write-tag">write</span></div>
+    </div>
+    </td>
+  </tr><tr>
+    <td>
+    <div class="quickref-card">
+      <h3>Customer Success</h3>
+      <div class="try-line">"Which accounts are at risk in the next 60 days?"</div>
+      <div class="try-line">"What's renewing this quarter?"</div>
+      <div class="try-line">"Give me a fast health check on this account."</div>
+    </div>
+    </td>
+    <td></td>
+  </tr></table>
+  <div class="footer">
+    <span>Salesforce Cloud MCP Server</span>
+    <span>07</span>
+  </div>
+</div>
+
+<!-- PAGE 8: ONE ASK, MULTIPLE TOOLS -->
+<div class="page">
+  <div class="tag">ONE ASK, MULTIPLE TOOLS</div>
+  <h2>The real unlock isn't one tool &mdash; it's chaining them</h2>
+  <p>Claude doesn't just call one tool per question. Ask something that
+  spans a few systems, and it works out which tools to call, in what
+  order, and stitches the results into one answer &mdash; no separate
+  dashboards, no manual cross-referencing.</p>
+
+  <div class="combo-card">
+    <div class="ask">&ldquo;Before my QBR with Acme Corp, give me the full account picture, check if they're at risk, and log a follow-up task.&rdquo;</div>
+    <div class="combo-chain">
+      <span class="label">Chains</span>
+      <span class="tool-badge">sf_get_account_360</span>
+      <span class="arrow-sep">&rarr;</span>
+      <span class="tool-badge">sf_get_at_risk_accounts</span>
+      <span class="arrow-sep">&rarr;</span>
+      <span class="tool-badge">sf_log_activity_note</span>
+    </div>
+  </div>
+
+  <div class="combo-card">
+    <div class="ask">&ldquo;Pull our top campaigns by ROI this quarter, then tell me which of those leads are still open and unworked.&rdquo;</div>
+    <div class="combo-chain">
+      <span class="label">Chains</span>
+      <span class="tool-badge">sf_get_campaign_performance</span>
+      <span class="arrow-sep">&rarr;</span>
+      <span class="tool-badge">sf_get_campaign_members</span>
+      <span class="arrow-sep">&rarr;</span>
+      <span class="tool-badge">sf_get_leads</span>
+    </div>
+  </div>
+
+  <div class="combo-card">
+    <div class="ask">&ldquo;Summarize pipeline by stage, and log a note on any deal over $50k with no recent activity.&rdquo;</div>
+    <div class="combo-chain">
+      <span class="label">Chains</span>
+      <span class="tool-badge">sf_get_pipeline_summary</span>
+      <span class="arrow-sep">&rarr;</span>
+      <span class="tool-badge">sf_get_open_opportunities</span>
+      <span class="arrow-sep">&rarr;</span>
+      <span class="tool-badge">sf_log_activity_note</span>
+    </div>
+  </div>
+
+  <div class="combo-card">
+    <div class="ask">&ldquo;Check if this account is in our VIP segment in Data 360, and if their case volume is high, open a follow-up case.&rdquo;</div>
+    <div class="combo-chain">
+      <span class="label">Chains</span>
+      <span class="tool-badge">dc_query</span>
+      <span class="arrow-sep">&rarr;</span>
+      <span class="tool-badge">sf_get_open_cases</span>
+      <span class="arrow-sep">&rarr;</span>
+      <span class="tool-badge">sf_create_case</span>
+    </div>
+  </div>
+
+  <div class="combo-card">
+    <div class="ask">&ldquo;This account just escalated &mdash; check their case history, see if they're already flagged at-risk, and bump this ticket to Critical.&rdquo;</div>
+    <div class="combo-chain">
+      <span class="label">Chains</span>
+      <span class="tool-badge">sf_get_open_cases</span>
+      <span class="arrow-sep">&rarr;</span>
+      <span class="tool-badge">sf_get_at_risk_accounts</span>
+      <span class="arrow-sep">&rarr;</span>
+      <span class="tool-badge">sf_update_case</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Salesforce Cloud MCP Server</span>
+    <span>08</span>
+  </div>
+</div>
+
+<!-- PAGE 9: DASHBOARD-STYLE CHAINS -->
+<div class="page">
+  <div class="tag">ASK FOR A DASHBOARD, NOT JUST AN ANSWER</div>
+  <h2>The same chains, rendered as a visual</h2>
+  <p>Every chain on the previous page returns text. Ask for a dashboard
+  instead, and Claude fetches the same data through the same tools, then
+  renders it as an actual chart or dashboard in the conversation &mdash;
+  no separate BI tool, no new code on the server side.</p>
+  <p>This is the different kind of dashboard from the cover: nothing to
+  build, nothing to maintain, nothing sitting in a tab waiting to go
+  stale. You get one only when you ask, built from live data in that
+  moment. Here's what two of these actually look like (fictional
+  numbers, for illustration).</p>
+
+  <div class="combo-card">
+    <div class="ask">&ldquo;Build me a dashboard of pipeline by stage.&rdquo;</div>
+    <div class="combo-chain" style="margin-bottom:10px;">
+      <span class="label">Chains</span>
+      <span class="tool-badge">sf_get_pipeline_summary</span>
+      <span class="visual-tag">renders as chart</span>
+    </div>
+    <svg viewBox="0 0 480 165" width="100%" height="150" role="img" aria-label="Bar chart of open pipeline by stage: Prospecting 8, Qualification 14, Proposal 6, Negotiation 4">
+      <line x1="20" y1="135" x2="460" y2="135" stroke="#d7deec" stroke-width="1"/>
+      <rect x="45" y="72" width="65" height="63" rx="4" fill="#2a78d6"/>
+      <text x="77" y="64" text-anchor="middle" font-size="13" font-weight="700" fill="#0b1730" font-family="Helvetica Neue, Arial, sans-serif">8</text>
+      <text x="77" y="151" text-anchor="middle" font-size="11" fill="#55607a" font-family="Helvetica Neue, Arial, sans-serif">Prospecting</text>
+      <rect x="165" y="25" width="65" height="110" rx="4" fill="#2a78d6"/>
+      <text x="197" y="17" text-anchor="middle" font-size="13" font-weight="700" fill="#0b1730" font-family="Helvetica Neue, Arial, sans-serif">14</text>
+      <text x="197" y="151" text-anchor="middle" font-size="11" fill="#55607a" font-family="Helvetica Neue, Arial, sans-serif">Qualification</text>
+      <rect x="285" y="88" width="65" height="47" rx="4" fill="#2a78d6"/>
+      <text x="317" y="80" text-anchor="middle" font-size="13" font-weight="700" fill="#0b1730" font-family="Helvetica Neue, Arial, sans-serif">6</text>
+      <text x="317" y="151" text-anchor="middle" font-size="11" fill="#55607a" font-family="Helvetica Neue, Arial, sans-serif">Proposal</text>
+      <rect x="405" y="104" width="65" height="31" rx="4" fill="#2a78d6"/>
+      <text x="437" y="96" text-anchor="middle" font-size="13" font-weight="700" fill="#0b1730" font-family="Helvetica Neue, Arial, sans-serif">4</text>
+      <text x="437" y="151" text-anchor="middle" font-size="11" fill="#55607a" font-family="Helvetica Neue, Arial, sans-serif">Negotiation</text>
+    </svg>
+  </div>
+
+  <div class="combo-card">
+    <div class="ask">&ldquo;Build a dashboard of at-risk accounts and what's renewing in the next 60 days.&rdquo;</div>
+    <div class="combo-chain" style="margin-bottom:10px;">
+      <span class="label">Chains</span>
+      <span class="tool-badge">sf_get_at_risk_accounts</span>
+      <span class="arrow-sep">&rarr;</span>
+      <span class="tool-badge">sf_get_renewals_due</span>
+      <span class="visual-tag">renders as dashboard</span>
+    </div>
+    <table style="width:100%; font-size:12.5px; border-collapse:collapse;">
+      <tr style="color:#7b859c; text-align:left;">
+        <td style="padding:4px 0;">Account</td><td>ARR</td><td>Risk flag</td>
+      </tr>
+      <tr style="border-top:0.5px solid #e7ebf3;"><td style="padding:5px 0;">Meridian Medical Devices</td><td>$320K</td><td style="color:#a32d2d;">2 open critical cases</td></tr>
+      <tr style="border-top:0.5px solid #e7ebf3;"><td style="padding:5px 0;">Vantage Life Sciences</td><td>$450K</td><td style="color:#a32d2d;">Renewal in 12 days, 40% prob</td></tr>
+      <tr style="border-top:0.5px solid #e7ebf3;"><td style="padding:5px 0;">Brightpath Software</td><td>$180K</td><td style="color:#a32d2d;">No contact in 34 days</td></tr>
+    </table>
+  </div>
+
+  <div class="combo-card">
+    <div class="ask">&ldquo;Chart campaign ROI for this quarter, biggest spender to smallest.&rdquo;</div>
+    <div class="combo-chain">
+      <span class="label">Chains</span>
+      <span class="tool-badge">sf_get_campaigns</span>
+      <span class="arrow-sep">&rarr;</span>
+      <span class="tool-badge">sf_get_campaign_performance</span>
+      <span class="visual-tag">renders as chart</span>
+    </div>
+  </div>
+
+  <div class="combo-card">
+    <div class="ask">&ldquo;Give me a dashboard of open cases by priority &mdash; I want to see it, not read a list.&rdquo;</div>
+    <div class="combo-chain">
+      <span class="label">Chains</span>
+      <span class="tool-badge">sf_get_open_cases</span>
+      <span class="visual-tag">renders as chart</span>
+    </div>
+  </div>
+
+  <div class="combo-card">
+    <div class="ask">&ldquo;Everything I need for Monday standup &mdash; pipeline, at-risk accounts, and open cases, one dashboard.&rdquo;</div>
+    <div class="combo-chain">
+      <span class="label">Chains</span>
+      <span class="tool-badge">sf_get_pipeline_summary</span>
+      <span class="arrow-sep">&rarr;</span>
+      <span class="tool-badge">sf_get_at_risk_accounts</span>
+      <span class="arrow-sep">&rarr;</span>
+      <span class="tool-badge">sf_get_open_cases</span>
+      <span class="visual-tag">renders as dashboard</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Salesforce Cloud MCP Server</span>
+    <span>09</span>
+  </div>
+</div>
+
+<!-- PAGE 10: FULL TOOL LIST -->
+<div class="page">
+  <div class="tag">EVERY TOOL, BY NAME</div>
+  <h2>32 to start with &mdash; not a ceiling</h2>
+  <p>This is the actual list, not a sample. 9 write data back (tagged
+  <span class="write-tag" style="margin-left:0;">write</span>); the rest
+  only read. It's open source and built specifically so a new tool is a
+  short, isolated addition &mdash; see the closing note below.</p>
+  <table class="toollist-grid"><tr>
+    <td>
+      <div class="toollist-cat">
+        <h4>Core</h4>
+        <div class="tool-row"><span class="name">sf_list_objects</span></div>
+        <div class="tool-row"><span class="name">sf_describe_object</span></div>
+        <div class="tool-row"><span class="name">sf_query</span></div>
+        <div class="tool-row"><span class="name">sf_get_open_opportunities</span></div>
+      </div>
+      <div class="toollist-cat">
+        <h4>Sales</h4>
+        <div class="tool-row"><span class="name">sf_get_pipeline_summary</span></div>
+        <div class="tool-row"><span class="name">sf_get_top_deals</span></div>
+        <div class="tool-row"><span class="name">sf_get_forecast</span></div>
+        <div class="tool-row"><span class="name">sf_get_leads</span></div>
+        <div class="tool-row"><span class="name">sf_log_activity_note</span><span class="write-tag">write</span></div>
+        <div class="tool-row"><span class="name">sf_update_opportunity</span><span class="write-tag">write</span></div>
+        <div class="tool-row"><span class="name">sf_delete_task</span><span class="write-tag">write</span></div>
+        <div class="tool-row"><span class="name">sf_delete_lead</span><span class="write-tag">write</span></div>
+      </div>
+      <div class="toollist-cat">
+        <h4>PreSales</h4>
+        <div class="tool-row"><span class="name">sf_get_opportunity_detail</span></div>
+        <div class="tool-row"><span class="name">sf_get_opportunity_products</span></div>
+        <div class="tool-row"><span class="name">sf_get_account_360</span></div>
+        <div class="tool-row"><span class="name">sf_create_contact</span><span class="write-tag">write</span></div>
+        <div class="tool-row"><span class="name">sf_update_contact</span><span class="write-tag">write</span></div>
+      </div>
+    </td>
+    <td>
+      <div class="toollist-cat">
+        <h4>Marketing</h4>
+        <div class="tool-row"><span class="name">sf_get_campaigns</span></div>
+        <div class="tool-row"><span class="name">sf_get_campaign_performance</span></div>
+        <div class="tool-row"><span class="name">sf_get_campaign_members</span></div>
+        <div class="tool-row"><span class="name">sf_get_leads_by_source</span></div>
+      </div>
+      <div class="toollist-cat">
+        <h4>Support</h4>
+        <div class="tool-row"><span class="name">sf_get_open_cases</span></div>
+        <div class="tool-row"><span class="name">sf_create_case</span><span class="write-tag">write</span></div>
+        <div class="tool-row"><span class="name">sf_update_case</span><span class="write-tag">write</span></div>
+      </div>
+      <div class="toollist-cat">
+        <h4>Customer Success</h4>
+        <div class="tool-row"><span class="name">sf_get_renewals_due</span></div>
+        <div class="tool-row"><span class="name">sf_get_at_risk_accounts</span></div>
+        <div class="tool-row"><span class="name">sf_get_account_health</span></div>
+      </div>
+      <div class="toollist-cat">
+        <h4>Data 360</h4>
+        <div class="tool-row"><span class="name">dc_query</span></div>
+      </div>
+      <div class="toollist-cat">
+        <h4>Marketing Cloud</h4>
+        <div class="tool-row"><span class="name">mc_list_data_extensions</span></div>
+        <div class="tool-row"><span class="name">mc_query_data_extension</span></div>
+        <div class="tool-row"><span class="name">mc_list_journeys</span></div>
+        <div class="tool-row"><span class="name">mc_upsert_data_extension_rows</span><span class="write-tag">write</span></div>
+      </div>
+    </td>
+  </tr></table>
+  <p style="margin-top:10px; font-size:13px;">Every tool file is scoped to one business
+  function and shares one client layer &mdash; adding a 33rd tool (yours) never touches
+  auth or anyone else's code. See <b>CONTRIBUTING.md</b> in the repo.</p>
+  <div class="footer">
+    <span>Salesforce Cloud MCP Server</span>
+    <span>10</span>
+  </div>
+</div>
+
+<!-- PAGE 11: TECH / ENGINEERING -->
 <div class="page">
   <div class="tag">HOW IT'S BUILT</div>
   <h2>Engineered to be extended, not just used</h2>
@@ -336,11 +739,12 @@
     <li><b>A separate, correctly-scoped connection for Marketing Cloud</b> &mdash; it's a
     genuinely different Salesforce product with its own API, and the code treats it
     that way instead of pretending it's the same system.</li>
-    <li><b>One tool file per business function</b> (sales, presales, marketing, customer
-    success) sharing a single generic SOQL/REST client &mdash; adding a new tool never
+    <li><b>One tool file per business function</b> (sales, presales, marketing, support,
+    customer success) sharing a single generic SOQL/REST client &mdash; adding a new tool never
     touches auth or another team's file.</li>
-    <li><b>Read tools and one clearly-marked mutating tool</b>, with the convention
-    documented so anyone contributing keeps that split visible.</li>
+    <li><b>Read tools and clearly-marked mutating tools</b> (update, create,
+    and scoped delete operations), with the convention documented so anyone
+    contributing keeps that split visible.</li>
     <li><b>Two runnable entrypoints, one codebase</b> &mdash; a stdio process for local use,
     a Streamable-HTTP service with a health check and access control for cloud
     deployment, sharing every tool and client underneath.</li>
@@ -350,11 +754,11 @@
   </ul>
   <div class="footer">
     <span>Salesforce Cloud MCP Server</span>
-    <span>06</span>
+    <span>11</span>
   </div>
 </div>
 
-<!-- PAGE 7: GETTING STARTED / CTA -->
+<!-- PAGE 12: GETTING STARTED / CTA -->
 <div class="page">
   <div class="tag">GET STARTED</div>
   <h2>From a sandbox login to a live conversation</h2>
@@ -373,7 +777,7 @@
   </div>
   <div class="footer">
     <span>Salesforce Cloud MCP Server</span>
-    <span>07</span>
+    <span>12</span>
   </div>
 </div>
 

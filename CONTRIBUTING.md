@@ -47,11 +47,21 @@ That's it — importing the module in `server.py` registers it.
   separate APIs and auth, and the prefix makes that visible to anyone
   reading the tool list.
 - **Read tools return data. Nothing else.** If a tool mutates
-  Salesforce (creates/updates/deletes a record), say **MUTATING** as
+  Salesforce (creates or updates a record), say **MUTATING** as
   the first word of its docstring, like `sf_log_activity_note` does.
-  MCP hosts and the people using them treat those calls with more
-  caution, and they should be able to tell which tools are which
-  without reading the code.
+  If it deletes something, say **MUTATING, DESTRUCTIVE** instead —
+  see `sf_delete_task` — even though Salesforce's Recycle Bin makes
+  most deletes recoverable for ~15 days, that's a safety net, not a
+  reason to undersell what the tool does. MCP hosts and the people
+  using them treat those calls with more caution, and they should be
+  able to tell which tools are which without reading the code.
+- **Prefer named, narrow mutating tools over a generic one.** A tool
+  that updates one specific field set on one object type
+  (`sf_update_opportunity`) is safer and more predictable than a
+  general-purpose `sf_update(any_object, any_fields)` exposed
+  directly to an LLM — the generic version exists at the client layer
+  (`sf_client.update`) for exactly this reason: build named tools on
+  top of it, don't expose it directly.
 - **Prefer standard fields over org-specific ones.** Custom fields
   (`__c`) vary org to org, so a tool built on one org's custom
   "health score" field won't work for anyone else who clones this

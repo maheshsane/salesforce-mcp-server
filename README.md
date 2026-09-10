@@ -3,8 +3,9 @@
 A Model Context Protocol (MCP) server that connects Claude directly to a
 live Salesforce org — Sales Cloud, Service Cloud, and (separately)
 Marketing Cloud — so you can query accounts, pipeline, cases, campaigns,
-and journeys in plain language, across Sales, PreSales, Marketing, and
-Customer Success: top of the funnel to bottom of the funnel, one server.
+and journeys in plain language, across Sales, PreSales, Marketing,
+Support, and Customer Success: top of the funnel to bottom of the
+funnel, one server.
 
 Each user runs this locally against their **own** org. Nothing is hosted
 centrally and no credentials ever leave your machine.
@@ -32,19 +33,24 @@ way. The only thing that changes between the two is the transport layer
 and where the Salesforce session lives — nothing about *what* the server
 can do.
 
-## Why two connections
+## Why two connections, not three
 
-Sales Cloud and Service Cloud share one core Salesforce REST API and one
-OAuth login — that's `sf_client.py`. **Marketing Cloud is a separate
-Salesforce product** with its own subdomain, its own API, and its own
-server-to-server auth — that's `mc_client.py`. You can set up one, the
-other, or both, and Claude will only see tools for the ones you configure.
+Sales Cloud, Service Cloud, and now **Data 360** (formerly Data Cloud)
+all run through one core Salesforce REST API and one OAuth login —
+that's `sf_client.py` for objects and `dc_client.py` for Data 360's SQL
+queries, but the same session underneath, so Data 360 needs zero extra
+setup beyond what `setup_salesforce_auth.py` already did.
+**Marketing Cloud genuinely is a separate Salesforce product** with its
+own subdomain, its own API, and its own server-to-server auth — that's
+`mc_client.py`. You can set up Marketing Cloud, skip it, or add it
+later, and Claude will only see its tools once it's configured.
 
 ## Architecture
 
 Tools are organized one file per function in `tools/`, all sharing the
-same two API clients. Adding a tool — or a whole new domain — never
-requires touching auth or the other domains; see `CONTRIBUTING.md`.
+same three API clients (`sf_client.py`, `dc_client.py`, `mc_client.py`).
+Adding a tool — or a whole new domain — never requires touching auth or
+the other domains; see `CONTRIBUTING.md`.
 
 ```
 Claude Desktop (MCP Client)                  Any MCP-over-HTTP client
@@ -56,16 +62,21 @@ server.py                                    server_remote.py
         └──────────────┬─────────────────────────────┘
                         ▼
         ├── tools/core.py               ─┐
-        ├── tools/sales.py               │  all built on
-        ├── tools/presales.py            │  sf_client.py
-        ├── tools/marketing.py           │  (SOQL, describe,
-        ├── tools/customer_success.py   ─┘   any object)
+        ├── tools/sales.py               │  built on sf_client.py
+        ├── tools/presales.py            │  (SOQL, describe,
+        ├── tools/marketing.py           │   any object)
+        ├── tools/support.py             │
+        ├── tools/customer_success.py   ─┘
+        │
+        ├── tools/data_cloud.py         ──  dc_client.py
+        │                                   (Data 360 SQL — same
+        │                                    session as sf_client.py)
         │
         └── tools/marketing_cloud.py    ──  mc_client.py
                                              (Data Extensions, Journeys)
         │                                        │
         ▼                                        ▼
-Sales/Service Cloud                        Marketing Cloud
+Sales/Service Cloud/Data 360                Marketing Cloud
  REST API, OAuth                             REST API, OAuth
  (Authorization Code                         (Client Credentials —
   + PKCE — browser                             server-to-server,
@@ -299,6 +310,9 @@ managed HTTPS, scale-to-zero, no cluster to run yourself.
 | `sf_get_forecast` | Open deals closing within N days |
 | `sf_get_leads` | Leads filtered by status/source |
 | `sf_log_activity_note` | **MUTATING** — logs a Task (call note, follow-up) on any record |
+| `sf_update_opportunity` | **MUTATING** — updates stage, amount, close date, or next step |
+| `sf_delete_task` | **MUTATING, DESTRUCTIVE** — deletes a Task (Recycle Bin, ~15 days recoverable) |
+| `sf_delete_lead` | **MUTATING, DESTRUCTIVE** — deletes a Lead (Recycle Bin, ~15 days recoverable) |
 
 **PreSales (`tools/presales.py`)**
 
@@ -307,6 +321,8 @@ managed HTTPS, scale-to-zero, no cluster to run yourself.
 | `sf_get_opportunity_detail` | Full deal context: stage, next steps, contact roles |
 | `sf_get_opportunity_products` | Products/line items quoted on a deal |
 | `sf_get_account_360` | One-call full picture: account, opps, cases, contacts, recent activity |
+| `sf_create_contact` | **MUTATING** — adds a new stakeholder/contact to an account |
+| `sf_update_contact` | **MUTATING** — updates a contact's title, email, or phone |
 
 **Marketing (`tools/marketing.py`)** — core Salesforce Campaigns
 
@@ -317,14 +333,27 @@ managed HTTPS, scale-to-zero, no cluster to run yourself.
 | `sf_get_campaign_members` | Leads/Contacts on a campaign by member status |
 | `sf_get_leads_by_source` | Lead volume and conversion, grouped by source |
 
-**Customer Success (`tools/customer_success.py`)**
+**Support (`tools/support.py`)** — working the queue
 
 | Tool | Description |
 |---|---|
 | `sf_get_open_cases` | Open support cases by priority |
+| `sf_create_case` | **MUTATING** — opens a new support Case on an account |
+| `sf_update_case` | **MUTATING** — resolves, escalates, or annotates an existing Case |
+
+**Customer Success (`tools/customer_success.py`)** — working the relationship
+
+| Tool | Description |
+|---|---|
 | `sf_get_renewals_due` | Open opportunities closing within N days |
 | `sf_get_at_risk_accounts` | Best-effort risk view: low probability + open high-priority cases |
 | `sf_get_account_health` | Fast health snapshot: case load, last activity, open opps |
+
+**Data 360 (`tools/data_cloud.py`)** — same connection as core Salesforce, no extra setup
+
+| Tool | Description |
+|---|---|
+| `dc_query` | ANSI SQL query over unified profile and data lake objects |
 
 **Marketing Cloud (`tools/marketing_cloud.py`)** — separate product, separate connection
 
@@ -333,6 +362,7 @@ managed HTTPS, scale-to-zero, no cluster to run yourself.
 | `mc_list_data_extensions` | List Data Extensions (subscriber/campaign tables) |
 | `mc_query_data_extension` | Read rows from a Data Extension |
 | `mc_list_journeys` | List Journey Builder journeys |
+| `mc_upsert_data_extension_rows` | **MUTATING** — inserts/updates Data Extension rows (no row-delete tool exists — see below) |
 
 A few of these (`sf_get_at_risk_accounts`, `sf_get_renewals_due`) only
 know about standard Opportunity/Case fields. If your org tracks health
@@ -341,6 +371,48 @@ to find it and query it directly with `sf_query` — Claude can build
 that SOQL for you. Want a tool this list doesn't have? See
 `CONTRIBUTING.md` — it's a five-minute addition.
 
+## What's read-only vs. writable, per system
+
+This isn't symmetric across the three connections, and it's worth
+understanding why before you assume a capability exists.
+
+**Salesforce (Sales/Service Cloud): full CRUD is available at the
+client layer** (`sf_client.py` has `query`, `describe_object`,
+`create`, `update`, `delete`) — the REST API genuinely supports all
+four. What's actually *exposed as a tool* is deliberately narrower:
+specific, named operations (update an Opportunity's stage, create a
+Case, delete a Task) rather than a generic "update any object" or
+"delete any object" tool. A generic version would let Claude modify
+or delete *any record in any object* the connected user can touch,
+driven by how it interpreted a sentence — a materially bigger blast
+radius than a handful of named, documented operations. Account,
+Opportunity, Case, and Contact deletion are deliberately **not**
+exposed as tools here; those are higher-stakes records than a Task or
+a duplicate Lead, and adding delete for them is a decision to make
+deliberately, not a default. See `CONTRIBUTING.md`'s mutating-tool
+convention if you want to add one.
+
+**Marketing Cloud: upsert exists, row-level delete doesn't.**
+`mc_upsert_data_extension_rows` inserts or updates rows. There's
+deliberately no matching delete tool — Marketing Cloud's REST API
+doesn't expose one for individual rows; the only REST delete
+available operates on an *entire Data Extension*, not a row, which is
+a different and far more destructive operation. Row-level delete
+exists only via the older SOAP API, which isn't implemented here.
+
+**Data 360: read-only, and that's the platform's own design, not a
+gap in this repo.** Data 360's Query/Connect API is read-only by
+Salesforce's own design, aside from a separate Ingestion API for
+loading data in bulk (not implemented here — that's a materially
+different, heavier integration than editing a record). You don't
+"update a row" in Data 360 the way you update a Salesforce Contact;
+data arrives through ingestion pipelines, and segments/activations
+have their own dedicated build/publish workflow. If you need to
+*manage* Data 360 (build segments, trigger activations) rather than
+query it, Salesforce's own hosted Data 360 MCP server is the right
+tool for that job — see `dc_client.py`'s docstring for more on how
+the two are complementary rather than overlapping.
+
 ## Example prompts
 
 **Sales:** "Summarize my pipeline by stage, then show me the 10 biggest open deals."
@@ -348,6 +420,8 @@ that SOQL for you. Want a tool this list doesn't have? See
 **PreSales:** "Give me the full picture on the Acme Corp opportunity before my demo tomorrow — stage, contacts involved, and what products are on the quote."
 
 **Marketing:** "Which campaigns from this quarter had the best ROI, and which lead sources are converting best in the last 90 days?"
+
+**Support:** "What's open in the queue right now by priority? Open a new case for the outage they just reported and mark it Critical."
 
 **Customer Success:** "Pull all open opportunities closing in the next 60 days with less than 50% probability, cross-referenced with open high-priority cases. Then log a follow-up task on the riskiest one."
 
@@ -366,10 +440,14 @@ that SOQL for you. Want a tool this list doesn't have? See
 - Revoke access anytime from Salesforce Setup → Connected Apps OAuth
   Usage, or Marketing Cloud → Installed Packages. Revoking also
   invalidates any `SF_REFRESH_TOKEN` you've copied into a cloud secret.
-- `sf_log_activity_note` is the one **mutating** tool in this repo — it
-  writes a Task back to Salesforce. Every other tool is read-only. If
-  you add new tools (see `CONTRIBUTING.md`), keep that same split
-  visible: mutating tools should say so plainly in their docstring.
+- 9 of the 32 tools are **mutating** — see "What's read-only vs.
+  writable, per system" above for the full list and the reasoning
+  behind what's deliberately *not* exposed (generic update/delete,
+  Account/Opportunity/Case/Contact deletion, Marketing Cloud row
+  delete, any Data 360 write). If you add new tools (see
+  `CONTRIBUTING.md`), keep that same split visible: mutating tools
+  should say so plainly in their docstring, and destructive ones
+  (delete) should say that too.
 - The remote variant is a normal web service the moment you deploy it
   — anyone with the URL and the bearer token can call your Salesforce
   tools. `MCP_SHARED_SECRET` is required before you deploy anywhere

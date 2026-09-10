@@ -3,9 +3,10 @@
 Salesforce Cloud MCP Server — entrypoint.
 
 Each tool lives in tools/<domain>.py (sales, presales, marketing,
-customer_success, marketing_cloud, core) and registers itself against
-the shared FastMCP instance in mcp_instance.py just by being imported.
-This file's only job is: load config, import every tool module, run.
+support, customer_success, data_cloud, marketing_cloud, core) and
+registers itself against the shared FastMCP instance in
+mcp_instance.py just by being imported. This file's only job is: load
+config, import every tool module, run.
 
 To add a new tool: write a new tools/<name>.py that does
 `from mcp_instance import mcp` and defines `@mcp.tool()` functions, then
@@ -29,7 +30,9 @@ from tools import core          # sf_query, sf_describe_object, sf_list_objects,
 from tools import sales         # pipeline, forecast, leads, top deals, activity logging
 from tools import presales      # opportunity detail, products/quote lines, account 360
 from tools import marketing     # campaigns, campaign ROI, campaign members, lead source
-from tools import customer_success  # open cases, renewals, at-risk accounts, account health
+from tools import support       # case intake, triage, resolution
+from tools import customer_success  # renewals, at-risk accounts, account health
+from tools import data_cloud        # Data 360 unified profile / data lake SQL queries
 from tools import marketing_cloud   # Marketing Cloud data extensions & journeys (optional)
 
 if __name__ == "__main__":

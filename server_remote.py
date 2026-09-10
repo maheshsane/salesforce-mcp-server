@@ -49,7 +49,9 @@ from tools import core          # noqa: F401
 from tools import sales         # noqa: F401
 from tools import presales      # noqa: F401
 from tools import marketing     # noqa: F401
+from tools import support       # noqa: F401
 from tools import customer_success  # noqa: F401
+from tools import data_cloud        # noqa: F401
 from tools import marketing_cloud   # noqa: F401
 
 SHARED_SECRET = os.environ.get("MCP_SHARED_SECRET")
