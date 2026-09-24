@@ -11,13 +11,13 @@ import json
 from datetime import date
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server import MCPServer
 
 DATA_PATH = Path(__file__).parent / "data" / "demo_salesforce.json"
 with open(DATA_PATH) as f:
     SF_DATA = json.load(f)
 
-mcp = FastMCP("salesforce-cloud-demo")
+mcp = MCPServer("salesforce-cloud-demo")
 
 
 @mcp.tool()

@@ -12,15 +12,15 @@ Run it directly for local testing:
 Or via the Dockerfile for any of the cloud deployment paths in
 README.md (Cloud Run, App Runner, Container Apps).
 
-NOTE ON THE MCP SDK CALL BELOW: the Python MCP SDK's HTTP-serving API
-has changed across versions (some expose `FastMCP.streamable_http_app()`
-to get a mountable ASGI app; others expose `FastMCP.run(transport=...)`
-directly). This file tries the ASGI-app approach first and falls back
-to the direct one. If neither matches the SDK version you have
-installed, run `python3 -c "from mcp.server.fastmcp import FastMCP; help(FastMCP)"`
-to see what your installed version actually offers, and adjust `_build_app()`
-below accordingly — the rest of this file (health check, auth
-middleware) doesn't need to change.
+NOTE ON THE MCP SDK CALL BELOW: this targets mcp SDK v2 (see
+requirements.txt's `mcp>=2.0.0,<3.0.0` pin) — `mcp_instance.py` builds
+`mcp` via `from mcp.server import MCPServer`, v2's renamed successor to
+v1's `FastMCP`. Per the SDK's own v1-to-v2 migration guide,
+`streamable_http_app()` and `session_manager` kept their names and
+behavior across that rename, so the `hasattr()` checks below work
+against either an `MCPServer` (v2) or `FastMCP` (v1, if you've pinned
+this project back to that line) instance without caring which built
+the object — that's deliberate, not a workaround.
 
 A CONFIRMED GOTCHA, fixed below: mounting `mcp.streamable_http_app()`
 under a bare `Mount("/", ...)` fails at the first real request with
@@ -28,10 +28,10 @@ under a bare `Mount("/", ...)` fails at the first real request with
 — Starlette doesn't propagate a mounted sub-app's lifespan on its own,
 so the session manager's task group never starts. This was confirmed
 and fixed in the SDK's own docs (modelcontextprotocol/python-sdk
-issues #1467 / #1484): the fix is to wire an explicit `lifespan` on
-the parent Starlette app that runs `mcp.session_manager.run()`. If
-your installed SDK version doesn't have `mcp.session_manager` (older
-versions), that's a sign to `pip install --upgrade mcp`.
+issues #1467 / #1484), and remains required, unchanged, under v2: wire
+an explicit `lifespan` on the parent Starlette app that runs
+`mcp.session_manager.run()`, exactly as the v2 migration guide's own
+example does.
 """
 
 import contextlib

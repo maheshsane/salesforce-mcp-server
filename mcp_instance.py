@@ -8,6 +8,6 @@ to build on: a new domain module just needs `from mcp_instance import mcp`
 and its own `@mcp.tool()` functions — nothing else changes.
 """
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server import MCPServer
 
-mcp = FastMCP("salesforce-cloud")
+mcp = MCPServer("salesforce-cloud")
