@@ -5,3 +5,7 @@ python-dotenv>=1.0.0
 # Only needed for the remote/cloud variant (server_remote.py + Dockerfile)
 uvicorn[standard]>=0.30.0
 starlette>=0.37.0
+
+# Only needed for the Slack integration (integrations/slack/slack_handler.py)
+slack_sdk>=3.44.0
+anthropic>=1.8.0
