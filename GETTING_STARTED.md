@@ -54,8 +54,8 @@ Open Claude Desktop and actually try prompts from
 `docs/FUNCTIONALITY_GUIDE.md` Part 1 for your team — pipeline
 summary, account 360, at-risk accounts, whichever's relevant. This is
 where you find out whether your org's picklist values and custom
-fields match what the tools assume (README's Part 2 checklist tells
-you what to look for and fix).
+fields match what the tools assume (`docs/FUNCTIONALITY_GUIDE.md`
+Part 2 checklist tells you what to look for and fix).
 
 **Stop here if you only need this for yourself.** The local variant is
 the finished product for a single user. Steps 6–9 are only for a
@@ -98,3 +98,14 @@ exact path) and run through the same prompts from step 5 against the
 live deployment, as one real user, before telling your team it's
 ready. Only after that: share it out — on Team/Enterprise, an Owner
 adds it once centrally and everyone else just connects.
+
+## Optional: interactive Slack access (`/ask-sf`)
+
+Separate from the numbered sequence above — this works on top of
+either the local or remote variant, and can be added at any point
+once step 5 is working. Full setup (Slack App, Socket Mode, the two
+tokens, a dedicated Anthropic API key) is in
+`docs/SLACK_INTEGRATION.md`. Short version: no public URL or tunnel
+needed, but the process has to keep running the whole time you want
+the command to work — there's no "it just works in the background"
+the way Claude Desktop's own connection does.
