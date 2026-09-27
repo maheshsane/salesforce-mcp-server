@@ -149,7 +149,7 @@ def _save_tokens(tokens: dict):
     TOKEN_FILE.chmod(0o600)
 
 
-def get_valid_access_token() -> tuple[str, str]:
+def get_valid_access_token(max_retries: int = 3) -> tuple[str, str]:
     """
     Returns (access_token, instance_url), refreshing via the stored
     refresh token.
@@ -162,45 +162,66 @@ def get_valid_access_token() -> tuple[str, str]:
       2. .salesforce_token.json on disk — used by the local variant,
          written by `python3 setup_salesforce_auth.py`.
 
-    Salesforce refresh tokens don't rotate on use by default (unless an
-    org's Connected App policy says otherwise), so a static env var
-    works fine for the common case.
+    RETRIES, AND WHY THEY RE-READ THE TOKEN EACH TIME: with several
+    processes sharing one Connected App (the Slack integrations each
+    run as their own process), a refresh-token-rotation policy means
+    each use immediately invalidates the previous token. If Process A
+    rotates the token a moment before Process B tries to use the
+    now-stale one it already had in memory, B's request fails with
+    invalid_grant -- even though a perfectly valid token exists on
+    disk by that point, because A already saved it. A naive retry that
+    reuses the same in-memory token would just fail identically every
+    time. So each retry re-reads the token file fresh from disk rather
+    than reusing what this call started with -- if another process's
+    rotation has already landed, the retry picks it up and succeeds.
+    A brief pause between attempts gives an in-flight rotation from
+    another process a moment to finish saving before the next read.
+
+    This does NOT paper over a genuinely dead session (password
+    changed, refresh token actually expired, connected app revoked) --
+    those fail identically on every retry, re-reading the file changes
+    nothing, and the real error still surfaces after max_retries.
     """
-    env_refresh_token = os.environ.get("SF_REFRESH_TOKEN")
-    if env_refresh_token:
-        refresh_token = env_refresh_token
-    elif TOKEN_FILE.exists():
-        refresh_token = json.loads(TOKEN_FILE.read_text())["refresh_token"]
-    else:
-        raise RuntimeError(
-            "No Salesforce session found. Run `python3 setup_salesforce_auth.py` "
-            "locally first, or set SF_REFRESH_TOKEN in this environment."
-        )
-
     login_url, client_id, client_secret, _ = _load_config()
-    refresh_params = {
-        "grant_type": "refresh_token",
-        "refresh_token": refresh_token,
-        "client_id": client_id,
-    }
-    if client_secret:
-        refresh_params["client_secret"] = client_secret
 
-    resp = requests.post(f"{login_url}/services/oauth2/token", data=refresh_params, timeout=30)
-    if resp.status_code != 200:
-        raise RuntimeError(
+    last_error = None
+    for attempt in range(max_retries):
+        env_refresh_token = os.environ.get("SF_REFRESH_TOKEN")
+        if env_refresh_token:
+            refresh_token = env_refresh_token
+        elif TOKEN_FILE.exists():
+            refresh_token = json.loads(TOKEN_FILE.read_text())["refresh_token"]
+        else:
+            raise RuntimeError(
+                "No Salesforce session found. Run `python3 setup_salesforce_auth.py` "
+                "locally first, or set SF_REFRESH_TOKEN in this environment."
+            )
+
+        refresh_params = {
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token,
+            "client_id": client_id,
+        }
+        if client_secret:
+            refresh_params["client_secret"] = client_secret
+
+        resp = requests.post(f"{login_url}/services/oauth2/token", data=refresh_params, timeout=30)
+
+        if resp.status_code == 200:
+            tokens = resp.json()
+            tokens.setdefault("refresh_token", refresh_token)
+            try:
+                _save_tokens(tokens)
+            except OSError:
+                pass
+            return (tokens["access_token"], tokens["instance_url"])
+
+        last_error = RuntimeError(
             f"Salesforce refresh failed ({resp.status_code}): {resp.text}\n"
             "The session may have been revoked. Re-run setup_salesforce_auth.py "
             "(local) or refresh SF_REFRESH_TOKEN (remote)."
         )
-    tokens = resp.json()
-    tokens.setdefault("refresh_token", refresh_token)
+        if attempt < max_retries - 1:
+            time.sleep(1.5)
 
-    # Best-effort local cache — skipped silently on read-only filesystems
-    # (many container platforms only allow writes under /tmp, or nowhere).
-    try:
-        _save_tokens(tokens)
-    except OSError:
-        pass
-
-    return tokens["access_token"], tokens["instance_url"]
+    raise last_error
