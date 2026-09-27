@@ -6,3 +6,8 @@ __pycache__/
 *.log
 .DS_Store
 .vscode/
+integrations/slack/.case_alert_state.json
+integrations/slack/.account_opportunity_state.json
+integrations/slack/.digest_scheduler_state.json
+integrations/slack/.pids/
+logs/
