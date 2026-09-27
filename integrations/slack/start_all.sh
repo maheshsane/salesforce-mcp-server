@@ -30,7 +30,7 @@ start_one() {
         return
     fi
 
-    python3 "$script" > "$log_file" 2>&1 &
+    python3 -u "$script" > "$log_file" 2>&1 &
     echo $! > "$pid_file"
     echo "  OK    $name started (PID $!), logging to $log_file"
 }
