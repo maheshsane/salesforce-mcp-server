@@ -53,6 +53,7 @@ import os
 from slack_sdk import WebClient
 
 from sf_agent import answer_question, unwrap_exception
+import alert_history
 
 # sf_client.py lives in the project root, two directories up from this
 # file (integrations/slack/). A direct top-level import only searches
@@ -87,12 +88,32 @@ SYSTEM_PROMPT = (
     "background.\n"
     "2. *Issue Summary* -- what this case is actually about, and whether "
     "this account has had other cases recently (a real pattern, not just "
-    "this one case in isolation -- check and say the actual count).\n"
+    "this one case in isolation -- check and say the actual count). If "
+    "a prior alert history section is included below, factor it in too "
+    "-- this is real, remembered context from previous alerts on this "
+    "account (not just cases), and a recurring pattern across multiple "
+    "alert types is a stronger signal than any one alert alone.\n"
     "3. *Draft Customer Email* -- addressed to the account's actual "
     "primary contact by name if one exists on file, acknowledging the "
     "issue, giving a concrete next step, professional but not overly "
     "apologetic. This is a DRAFT for a human to review and send -- never "
     "claim it has already been sent.\n\n"
+    "AUTO-ESCALATION -- you have the sf_update_case tool available. Use "
+    "it to escalate this case's priority to Critical, ONLY if ALL of "
+    "these are true: (a) the case is currently High, not already "
+    "Critical -- escalating something already Critical is a no-op, "
+    "don't bother; (b) the prior alert history section below shows at "
+    "least 2 previous alerts on this account -- a single case alone, "
+    "with no other history, is not grounds for escalation on its own; "
+    "(c) you can state a specific, real reason tying the pattern to "
+    "this decision, not a vague one. When you do escalate, pass a "
+    "description update to sf_update_case that APPENDS a short note "
+    "(e.g. 'Auto-escalated: 3rd alert this month, see Slack history') "
+    "rather than replacing the case's existing description, and say "
+    "plainly in your Issue Summary that you escalated it and why. If "
+    "these conditions aren't met, do not call the tool at all, and "
+    "don't mention escalation in the alert -- only bring it up when "
+    "you actually did it.\n\n"
     "Format for Slack: *bold* section headers and the account name with "
     "single asterisks, \u2022 for bullet points, no markdown headers."
 )
@@ -149,8 +170,10 @@ def check_for_new_cases():
 
     for case in new_cases:
         print(f"[case-alert] New {case['Priority']} case: {case['Subject']} ({case['Id']})")
+        account_name = case.get("AccountName") or "unknown account"
+        prompt = build_alert_prompt(case) + alert_history.format_history_for_prompt(account_name)
         try:
-            alert_text = asyncio.run(answer_question(build_alert_prompt(case), SYSTEM_PROMPT))
+            alert_text = asyncio.run(answer_question(prompt, SYSTEM_PROMPT))
         except Exception as e:
             alert_text = f"New {case['Priority']} case logged but the alert generation failed: {unwrap_exception(e)}"
 
@@ -172,6 +195,8 @@ def check_for_new_cases():
             print(f"[case-alert] FAILED to post alert for {case['Id']}: {unwrap_exception(e)}")
             print("[case-alert] stopping this cycle -- will retry remaining cases next poll")
             return
+
+        alert_history.log_alert(account_name, f"{case['Priority']} Case", f"{case['Subject']} (Case {case['Id']})")
 
         # Save immediately after each successful post, not batched at
         # the end -- so a later failure in this same cycle can't force

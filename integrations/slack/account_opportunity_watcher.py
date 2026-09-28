@@ -41,6 +41,7 @@ import asyncio
 import json
 import sys
 import time
+from datetime import date, timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -54,6 +55,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 import sf_client
 
 from sf_agent import answer_question, unwrap_exception
+import alert_history
 
 CSM_ALERTS_CHANNEL = "#csm-alerts"
 PRESALES_ALERTS_CHANNEL = "#presales-alerts"
@@ -100,10 +102,17 @@ NEW_OPPORTUNITY_SYSTEM_PROMPT = (
     "just created. Using the connected tools, pull real data. Respond "
     "with ONLY the content below -- no preamble.\n\n"
     "State the account name in bold, the deal amount and stage, and who "
-    "the PreSales owner is. Then give account context useful before the "
-    "next customer touchpoint -- health score, recent activity, any "
-    "existing relationship history (other opportunities, cases, Gong "
-    "calls). End with what the PreSales owner should prepare.\n\n"
+    "the PreSales owner is. If Sales_Rep_Name__c or "
+    "PreSales_Owner_Name__c comes back empty or null, that means this "
+    "deal genuinely hasn't been assigned to anyone yet -- say plainly "
+    "'not yet assigned' and move on. Do not keep searching for an "
+    "owner through other tools or fields if these two are empty; there "
+    "is nothing more to find. Then give account context useful before "
+    "the next customer touchpoint -- health score, recent activity, "
+    "any existing relationship history (other opportunities, cases, "
+    "Gong calls). End with what the PreSales owner should prepare, or "
+    "if unassigned, note that this should be assigned before any "
+    "customer touchpoint happens.\n\n"
     f"{FIELD_GUIDANCE}\n\n"
     "Format for Slack: *bold* with single asterisks, \u2022 for bullets, "
     "no markdown headers."
@@ -183,9 +192,15 @@ def build_deal_closed_prompt(opp: dict) -> str:
     )
 
 
-def run_agent_safely(prompt: str, system_prompt: str, fallback_note: str) -> str:
+def run_agent_safely(prompt: str, system_prompt: str, fallback_note: str, account_name: str = None) -> str:
     """Shared, resilient wrapper around answer_question -- same error
-    handling and empty-answer safety net as case_alert_watcher.py."""
+    handling and empty-answer safety net as case_alert_watcher.py.
+    If account_name is given, that account's prior alert history
+    (across ALL trigger types -- cases, health drops, new opps, deals
+    closing, not just this one) is appended as real, remembered
+    context, not something Claude has to be told explicitly each time."""
+    if account_name:
+        prompt = prompt + alert_history.format_history_for_prompt(account_name)
     try:
         text = asyncio.run(answer_question(prompt, system_prompt))
     except Exception as e:
@@ -219,6 +234,7 @@ def check_health_drops(state: dict):
         alert = run_agent_safely(
             build_health_drop_prompt(drop), HEALTH_DROP_SYSTEM_PROMPT,
             f"Health score dropped on {drop['account']['Name']}",
+            account_name=drop['account']['Name'],
         )
         header = f"\U0001F4C9 *Health Score Drop*\n\n"
         try:
@@ -226,6 +242,10 @@ def check_health_drops(state: dict):
         except Exception as e:
             print(f"[health-drop] FAILED to post: {unwrap_exception(e)}")
             return  # stop this cycle, same resilience pattern as case_alert_watcher.py
+        alert_history.log_alert(
+            drop['account']['Name'], "Health Drop",
+            f"Health dropped {drop['prior_score']} -> {drop['current_score']}",
+        )
 
     # Update recorded scores for every account, drop or not -- next
     # check compares against today's value, not the original baseline.
@@ -234,9 +254,46 @@ def check_health_drops(state: dict):
     save_state(state)
 
 
+SALES_REPS = ["Derek Simmons", "Natalie Cho", "Omar Farouk", "Isabelle Reyes"]
+PRESALES_OWNERS = ["Trevor Nakamura", "Sophia Lindqvist", "Adrian Voss", "Camille Brooks"]
+
+
+def next_rep_assignment(state: dict) -> tuple:
+    """Pure-ish (reads/increments state, no I/O) -- round-robin, same
+    pairing seed_rep_owners.py originally used, so a newly-assigned
+    deal follows the same pattern as the original 47."""
+    idx = state.get("next_rep_index", 0)
+    sales_rep = SALES_REPS[idx % len(SALES_REPS)]
+    presales_owner = PRESALES_OWNERS[idx % len(PRESALES_OWNERS)]
+    state["next_rep_index"] = idx + 1
+    return sales_rep, presales_owner
+
+
+def auto_assign_reps_if_needed(opp: dict, state: dict) -> tuple:
+    """If this opportunity has no Sales Rep or PreSales Owner yet,
+    assigns both via round-robin and writes them back to Salesforce
+    immediately -- a deterministic action, not something left to
+    Claude's judgment. Returns (possibly-updated opp, was_just_assigned)
+    so the caller can tell Claude this happened, since Claude has no
+    way to know on its own whether a value it sees was always there
+    or was just written moments ago."""
+    if opp.get("Sales_Rep_Name__c") and opp.get("PreSales_Owner_Name__c"):
+        return opp, False
+
+    sales_rep, presales_owner = next_rep_assignment(state)
+    sf_client.update("Opportunity", opp["Id"], {
+        "Sales_Rep_Name__c": sales_rep, "PreSales_Owner_Name__c": presales_owner,
+    })
+    opp["Sales_Rep_Name__c"] = sales_rep
+    opp["PreSales_Owner_Name__c"] = presales_owner
+    print(f"[new-opportunity] Auto-assigned {opp['Name']} -> Sales: {sales_rep}, PreSales: {presales_owner}")
+    return opp, True
+
+
 def check_new_opportunities(state: dict):
     opps = sf_client.query(
-        "SELECT Id, Name, AccountId, Account.Name, Amount, StageName FROM Opportunity "
+        "SELECT Id, Name, AccountId, Account.Name, Amount, StageName, "
+        "Sales_Rep_Name__c, PreSales_Owner_Name__c FROM Opportunity "
         "ORDER BY CreatedDate DESC LIMIT 50"
     )
     seen = set(state["seen_opp_ids"])
@@ -245,9 +302,19 @@ def check_new_opportunities(state: dict):
     for opp in new_opps:
         account_name = (opp.get("Account") or {}).get("Name")
         print(f"[new-opportunity] {opp['Name']} on {account_name}")
+        opp, just_assigned = auto_assign_reps_if_needed(opp, state)
+        prompt = build_new_opportunity_prompt(opp)
+        if just_assigned:
+            prompt += (
+                f"\n\nNote: Sales_Rep_Name__c ({opp['Sales_Rep_Name__c']}) and "
+                f"PreSales_Owner_Name__c ({opp['PreSales_Owner_Name__c']}) were "
+                f"just auto-assigned by the system moments ago, since this deal "
+                f"had neither. Mention this in your alert."
+            )
         alert = run_agent_safely(
-            build_new_opportunity_prompt(opp), NEW_OPPORTUNITY_SYSTEM_PROMPT,
+            prompt, NEW_OPPORTUNITY_SYSTEM_PROMPT,
             f"New opportunity created: {opp['Name']}",
+            account_name=account_name,
         )
         header = f"\U0001F195 *New Opportunity*\n\n"
         try:
@@ -255,10 +322,31 @@ def check_new_opportunities(state: dict):
         except Exception as e:
             print(f"[new-opportunity] FAILED to post: {unwrap_exception(e)}")
             return
+        if account_name:
+            alert_history.log_alert(account_name, "New Opportunity", f"{opp['Name']}, amount {opp.get('Amount')}")
 
         seen.add(opp["Id"])
         state["seen_opp_ids"] = list(seen)
         save_state(state)
+
+
+def create_csm_kickoff_task(opp: dict):
+    """Creates a real Salesforce Task -- a genuine, trackable action
+    item the CSM sees in their own queue, not just a Slack message
+    that might scroll past. WhatId ties it to the account so it shows
+    on the account's own activity timeline. A deterministic action,
+    not something left to Claude's judgment -- every Closed Won deal
+    gets one, always."""
+    due_date = (date.today() + timedelta(days=3)).isoformat()
+    amount = opp.get("Amount") or 0
+    sf_client.create("Task", {
+        "WhatId": opp.get("AccountId"),
+        "Subject": f"CSM Kickoff needed: {opp['Name']} (Closed Won)",
+        "Description": f"Deal closed Won for ${amount:,.0f}. Schedule a kickoff call with the customer this week.",
+        "ActivityDate": due_date,
+        "Status": "Not Started",
+        "Priority": "High",
+    })
 
 
 def check_closed_deals(state: dict):
@@ -275,6 +363,7 @@ def check_closed_deals(state: dict):
         alert = run_agent_safely(
             build_deal_closed_prompt(opp), DEAL_CLOSED_SYSTEM_PROMPT,
             f"Deal closed: {opp['Name']}",
+            account_name=account_name,
         )
         header = f"\U0001F389 *Deal Closed Won*\n\n"
         try:
@@ -284,6 +373,18 @@ def check_closed_deals(state: dict):
         except Exception as e:
             print(f"[deal-closed] FAILED to post: {unwrap_exception(e)}")
             return
+        if account_name:
+            alert_history.log_alert(account_name, "Deal Closed", f"{opp['Name']} -- ${amount:,.0f} Closed Won")
+
+        try:
+            create_csm_kickoff_task(opp)
+            print(f"[deal-closed] Created CSM kickoff Task for {opp['Name']}")
+        except Exception as e:
+            # A failed Task creation shouldn't block the rest of this
+            # cycle or lose the alert that already posted successfully
+            # -- log it and move on, same resilience posture as
+            # everything else here.
+            print(f"[deal-closed] FAILED to create kickoff Task: {unwrap_exception(e)}")
 
         seen.add(opp["Id"])
         state["seen_closed_won_ids"] = list(seen)
