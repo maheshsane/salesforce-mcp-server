@@ -32,7 +32,10 @@ def _request(method: str, path: str, **kwargs) -> dict:
     if resp.status_code == 401:
         # Token may have been invalidated between our cache check and this
         # call (e.g. revoked, or clock skew). Force one refresh and retry.
-        access_token, instance_url = salesforce_auth.get_valid_access_token()
+        # force_refresh=True is what makes this actually true now that
+        # salesforce_auth caches tokens -- without it, this call would
+        # just get the same cached (dead) token back.
+        access_token, instance_url = salesforce_auth.get_valid_access_token(force_refresh=True)
         headers["Authorization"] = f"Bearer {access_token}"
         resp = requests.request(method, f"{instance_url}{path}", headers=headers, timeout=30, **kwargs)
 

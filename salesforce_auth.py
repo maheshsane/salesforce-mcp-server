@@ -16,11 +16,13 @@ Nothing here ever hardcodes a token. Everything sensitive lives in
 """
 
 import base64
+import contextlib
 import hashlib
 import http.server
 import json
 import os
 import secrets
+import sys
 import threading
 import time
 import urllib.parse
@@ -138,90 +140,233 @@ def run_login_flow():
     return tokens
 
 
+def _lock_path() -> Path:
+    # Derived at call time from TOKEN_FILE rather than fixed at import,
+    # so it always sits next to whichever token file is in use.
+    return TOKEN_FILE.with_name(TOKEN_FILE.name + ".lock")
+
+
 def _save_tokens(tokens: dict):
+    """
+    Writes the token file ATOMICALLY: write a temp file, then rename it
+    over the real one. Several processes read this file without holding
+    any lock, and a plain write_text() truncates the file first, so a
+    reader could catch it empty or half-written. A rename is
+    all-or-nothing -- a reader sees the old file or the new one, never
+    a partial one.
+
+    Also records when the access token in here should be considered
+    stale (access_expires_at), which is what lets OTHER processes
+    reuse it instead of each doing their own refresh -- see
+    get_valid_access_token.
+    """
     payload = {
         "refresh_token": tokens["refresh_token"],
         "access_token": tokens.get("access_token"),
         "instance_url": tokens["instance_url"],
         "saved_at": time.time(),
     }
-    TOKEN_FILE.write_text(json.dumps(payload, indent=2))
-    TOKEN_FILE.chmod(0o600)
+    if tokens.get("access_token"):
+        payload["access_expires_at"] = time.time() + CACHE_SECONDS
+
+    tmp = TOKEN_FILE.with_name(f"{TOKEN_FILE.name}.tmp.{os.getpid()}")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write(json.dumps(payload, indent=2))
+    os.chmod(tmp, 0o600)
+    os.replace(tmp, TOKEN_FILE)
 
 
-def get_valid_access_token(max_retries: int = 3) -> tuple[str, str]:
+_cached_token = None  # (access_token, instance_url, expires_at_epoch_seconds) or None
+CACHE_SECONDS = 20 * 60  # conservative -- well under any realistic session length
+
+
+def _read_shared_access_token():
     """
-    Returns (access_token, instance_url), refreshing via the stored
-    refresh token.
-
-    Two ways this can get a refresh token, checked in order:
-      1. SF_REFRESH_TOKEN env var — used by the remote/cloud variant,
-         where you authenticate once locally and inject the resulting
-         refresh token as a platform secret (see README's "Deploying to
-         the cloud" section). No local token file needed or written.
-      2. .salesforce_token.json on disk — used by the local variant,
-         written by `python3 setup_salesforce_auth.py`.
-
-    RETRIES, AND WHY THEY RE-READ THE TOKEN EACH TIME: with several
-    processes sharing one Connected App (the Slack integrations each
-    run as their own process), a refresh-token-rotation policy means
-    each use immediately invalidates the previous token. If Process A
-    rotates the token a moment before Process B tries to use the
-    now-stale one it already had in memory, B's request fails with
-    invalid_grant -- even though a perfectly valid token exists on
-    disk by that point, because A already saved it. A naive retry that
-    reuses the same in-memory token would just fail identically every
-    time. So each retry re-reads the token file fresh from disk rather
-    than reusing what this call started with -- if another process's
-    rotation has already landed, the retry picks it up and succeeds.
-    A brief pause between attempts gives an in-flight rotation from
-    another process a moment to finish saving before the next read.
-
-    This does NOT paper over a genuinely dead session (password
-    changed, refresh token actually expired, connected app revoked) --
-    those fail identically on every retry, re-reading the file changes
-    nothing, and the real error still surfaces after max_retries.
+    (access_token, instance_url, expires_at) if this process, or any
+    other, left a still-fresh access token in the token file; else None.
+    Safe to call without the lock: _save_tokens replaces the file
+    atomically, so this never sees a half-written file.
     """
+    try:
+        data = json.loads(TOKEN_FILE.read_text())
+    except (OSError, ValueError):
+        return None
+    token = data.get("access_token")
+    url = data.get("instance_url")
+    expires_at = data.get("access_expires_at")
+    if token and url and expires_at and time.time() < expires_at:
+        return (token, url, expires_at)
+    return None
+
+
+@contextlib.contextmanager
+def _refresh_lock(timeout: float = 45.0):
+    """
+    Cross-process lock around the refresh-token exchange. Needed because
+    this org rotates refresh tokens: every refresh returns a NEW refresh
+    token and retires the one it just used (confirmed live -- three
+    consecutive refreshes produced three different tokens). The refresh
+    token is therefore a single-use credential shared through one file.
+    Two processes refreshing at once means one presents an
+    already-retired token, and depending on how the provider treats
+    reuse of a retired token, that can kill the whole chain rather than
+    just failing one call.
+
+    flock is released automatically by the OS if the holder dies, so a
+    crashed process can't leave this stuck. Where locking isn't
+    available (non-POSIX systems, read-only filesystems) this quietly
+    does nothing rather than break auth entirely.
+    """
+    try:
+        import fcntl
+    except ImportError:
+        yield
+        return
+    try:
+        handle = open(_lock_path(), "a+")
+    except OSError:
+        yield
+        return
+    try:
+        deadline = time.time() + timeout
+        while True:
+            try:
+                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except OSError:
+                if time.time() >= deadline:
+                    raise RuntimeError(
+                        "Timed out waiting for the Salesforce token refresh lock "
+                        f"({_lock_path()}) -- another process may be stuck mid-refresh."
+                    )
+                time.sleep(0.1)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+    finally:
+        handle.close()
+
+
+def _adopt(shared) -> tuple[str, str]:
+    global _cached_token
+    _cached_token = shared
+    return (shared[0], shared[1])
+
+
+def get_valid_access_token(max_retries: int = 3, force_refresh: bool = False) -> tuple[str, str]:
+    """
+    Returns (access_token, instance_url).
+
+    Where the refresh token comes from, checked in order:
+      1. SF_REFRESH_TOKEN env var -- the remote/cloud variant, where you
+         authenticate once locally and inject the resulting refresh
+         token as a platform secret. No local token file required.
+      2. .salesforce_token.json -- the local variant, written by
+         `python3 setup_salesforce_auth.py`.
+
+    HOW THIS AVOIDS REFRESHING, AND WHY IT MATTERS: refresh tokens rotate
+    here, so every refresh is a risky, single-use operation on a
+    credential shared by every process -- and this project runs several
+    at once, each alert additionally spawns a fresh server.py process
+    with an empty in-memory cache, and every Salesforce call used to
+    trigger its own refresh. Three layers now keep refreshes rare:
+      1. This process's in-memory cache.
+      2. The access token stored in the shared token file -- so a
+         freshly spawned process reuses what any other process already
+         obtained, instead of refreshing on its first call.
+      3. Only when both are empty, a real refresh, serialized behind a
+         cross-process lock, re-checking the shared token once the lock
+         is held (another process may have just refreshed while we
+         waited).
+
+    force_refresh=True means the caller just got a 401 using the token
+    we handed out, so that token is dead whatever the clock says. If
+    another process has meanwhile stored a DIFFERENT token, we adopt
+    that one rather than refreshing again -- otherwise several
+    processes hitting the same dead token would each rotate the refresh
+    token in turn.
+
+    The retry loop still re-reads the token source on every attempt, for
+    transient failures. It does not paper over a genuinely dead session
+    (password changed, app revoked): those fail identically each time
+    and the real error surfaces after max_retries.
+    """
+    global _cached_token
+    dead_token = None
+    if force_refresh:
+        if _cached_token is not None:
+            dead_token = _cached_token[0]
+        _cached_token = None
+
+    if _cached_token is not None:
+        access_token, instance_url, expires_at = _cached_token
+        if time.time() < expires_at:
+            return (access_token, instance_url)
+        _cached_token = None
+
+    shared = _read_shared_access_token()
+    if shared and shared[0] != dead_token:
+        return _adopt(shared)
+
     login_url, client_id, client_secret, _ = _load_config()
 
-    last_error = None
-    for attempt in range(max_retries):
-        env_refresh_token = os.environ.get("SF_REFRESH_TOKEN")
-        if env_refresh_token:
-            refresh_token = env_refresh_token
-        elif TOKEN_FILE.exists():
-            refresh_token = json.loads(TOKEN_FILE.read_text())["refresh_token"]
-        else:
-            raise RuntimeError(
-                "No Salesforce session found. Run `python3 setup_salesforce_auth.py` "
-                "locally first, or set SF_REFRESH_TOKEN in this environment."
+    with _refresh_lock():
+        shared = _read_shared_access_token()
+        if shared and shared[0] != dead_token:
+            return _adopt(shared)
+
+        last_error = None
+        for attempt in range(max_retries):
+            env_refresh_token = os.environ.get("SF_REFRESH_TOKEN")
+            if env_refresh_token:
+                refresh_token = env_refresh_token
+            elif TOKEN_FILE.exists():
+                refresh_token = json.loads(TOKEN_FILE.read_text())["refresh_token"]
+            else:
+                raise RuntimeError(
+                    "No Salesforce session found. Run `python3 setup_salesforce_auth.py` "
+                    "locally first, or set SF_REFRESH_TOKEN in this environment."
+                )
+
+            refresh_params = {
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token,
+                "client_id": client_id,
+            }
+            if client_secret:
+                refresh_params["client_secret"] = client_secret
+
+            resp = requests.post(f"{login_url}/services/oauth2/token", data=refresh_params, timeout=30)
+
+            if resp.status_code == 200:
+                tokens = resp.json()
+                tokens.setdefault("refresh_token", refresh_token)
+                try:
+                    _save_tokens(tokens)
+                except OSError:
+                    pass
+                _cached_token = (
+                    tokens["access_token"], tokens["instance_url"], time.time() + CACHE_SECONDS,
+                )
+                # One line per REAL refresh, so refresh frequency is visible in
+                # the logs (grep -c "token refreshed" logs/*.log) rather than
+                # something to guess at. stderr, so it never touches the MCP
+                # stdio protocol on stdout.
+                print(
+                    f"[salesforce_auth] token refreshed (pid {os.getpid()}"
+                    f"{', after a 401' if force_refresh else ''})",
+                    file=sys.stderr, flush=True,
+                )
+                return (tokens["access_token"], tokens["instance_url"])
+
+            last_error = RuntimeError(
+                f"Salesforce refresh failed ({resp.status_code}): {resp.text}\n"
+                "The session may have been revoked. Re-run setup_salesforce_auth.py "
+                "(local) or refresh SF_REFRESH_TOKEN (remote)."
             )
+            if attempt < max_retries - 1:
+                time.sleep(1.5)
 
-        refresh_params = {
-            "grant_type": "refresh_token",
-            "refresh_token": refresh_token,
-            "client_id": client_id,
-        }
-        if client_secret:
-            refresh_params["client_secret"] = client_secret
-
-        resp = requests.post(f"{login_url}/services/oauth2/token", data=refresh_params, timeout=30)
-
-        if resp.status_code == 200:
-            tokens = resp.json()
-            tokens.setdefault("refresh_token", refresh_token)
-            try:
-                _save_tokens(tokens)
-            except OSError:
-                pass
-            return (tokens["access_token"], tokens["instance_url"])
-
-        last_error = RuntimeError(
-            f"Salesforce refresh failed ({resp.status_code}): {resp.text}\n"
-            "The session may have been revoked. Re-run setup_salesforce_auth.py "
-            "(local) or refresh SF_REFRESH_TOKEN (remote)."
-        )
-        if attempt < max_retries - 1:
-            time.sleep(1.5)
-
-    raise last_error
+        raise last_error
