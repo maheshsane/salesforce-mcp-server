@@ -36,9 +36,18 @@ start_one() {
 }
 
 echo "Starting all 4 processes..."
+# Staggered with a short pause between each -- all 4 cold-starting at
+# once means all 4 hit Salesforce auth within the same instant,
+# which can exhaust even the retry logic in salesforce_auth.py (found
+# live: a simultaneous 4-way start caused repeated collisions across
+# multiple retry rounds, not just one clean handoff). A few seconds
+# between each start avoids the pile-up in the first place.
 start_one "ask-sf" "integrations/slack/slack_handler.py"
+sleep 3
 start_one "case-alerts" "integrations/slack/case_alert_watcher.py"
+sleep 3
 start_one "account-opportunity" "integrations/slack/account_opportunity_watcher.py"
+sleep 3
 start_one "digest-scheduler" "integrations/slack/digest_scheduler.py"
 
 echo ""

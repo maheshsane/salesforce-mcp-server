@@ -11,3 +11,5 @@ integrations/slack/.account_opportunity_state.json
 integrations/slack/.digest_scheduler_state.json
 integrations/slack/.pids/
 logs/
+.salesforce_token.json.*
+integrations/slack/.alert_history.jsonl
