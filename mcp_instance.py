@@ -10,4 +10,13 @@ and its own `@mcp.tool()` functions — nothing else changes.
 
 from mcp.server import MCPServer
 
-mcp = MCPServer("salesforce-cloud")
+mcp = MCPServer(
+    "salesforce-cloud",
+    instructions=(
+        "This org uses one shared Salesforce login, so every record's Owner field "
+        "shows the same person. Rep and owner names for filtering live in two custom "
+        "text fields on Opportunity instead: Sales_Rep_Name__c and "
+        "PreSales_Owner_Name__c. When someone asks about a person's deals, filter on "
+        "one of those fields, not on Owner or on a Salesforce User or Contact record."
+    )
+)

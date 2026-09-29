@@ -43,6 +43,13 @@ def sf_query(soql: str) -> str:
       "SELECT Id, Name, StageName, Amount, CloseDate FROM Opportunity
        WHERE IsClosed = false ORDER BY CloseDate ASC LIMIT 50"
     Use sf_describe_object first if you're unsure of field names.
+
+    Note on reps and owners: this org uses one shared Salesforce login,
+    so every record's Owner is the same person. To filter by a specific
+    sales rep or PreSales owner, query Opportunity.Sales_Rep_Name__c or
+    Opportunity.PreSales_Owner_Name__c instead — these are text fields,
+    not User lookups, so the person won't appear as a Salesforce User
+    or Contact.
     """
     return json.dumps(sf_client.query(soql), indent=2)
 
@@ -51,11 +58,17 @@ def sf_query(soql: str) -> str:
 def sf_get_open_opportunities(min_amount: float = 0, stage_contains: str = "") -> str:
     """
     Retrieve open (not closed) Opportunities with amount, stage,
-    probability, and close date. Optionally filter by minimum Amount
-    and/or a substring of the stage name (e.g. 'Negotiation', 'Technical
-    Validation'). General-purpose enough for Sales, PreSales, or
-    Customer Success renewal tracking — see tools/sales.py and
-    tools/presales.py for more specific views on top of this.
+    probability, close date, sales rep, and PreSales owner. Optionally
+    filter by minimum Amount and/or a substring of the stage name (e.g.
+    'Negotiation', 'Technical Validation'). General-purpose enough for
+    Sales, PreSales, or Customer Success renewal tracking — see
+    tools/sales.py and tools/presales.py for more specific views on top
+    of this.
+
+    Note on reps and owners: this org uses one shared Salesforce login,
+    so Owner is the same on every record. Sales_Rep_Name__c and
+    PreSales_Owner_Name__c (included below) are the real fields for who
+    owns a deal.
     """
     conditions = ["IsClosed = false"]
     if min_amount:
@@ -64,7 +77,8 @@ def sf_get_open_opportunities(min_amount: float = 0, stage_contains: str = "") -
         conditions.append(f"StageName LIKE '%{stage_contains}%'")
     soql = (
         "SELECT Id, Name, AccountId, Account.Name, StageName, Amount, "
-        "Probability, CloseDate, Description FROM Opportunity WHERE "
+        "Probability, CloseDate, Description, Sales_Rep_Name__c, "
+        "PreSales_Owner_Name__c FROM Opportunity WHERE "
         + " AND ".join(conditions)
         + " ORDER BY CloseDate ASC LIMIT 200"
     )
