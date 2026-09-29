@@ -73,31 +73,43 @@ web_client = WebClient(token=os.environ["SLACK_BOT_TOKEN"])
 
 SYSTEM_PROMPT = (
     "You are an automated system generating an internal alert for a "
-    "newly-logged Critical or High priority Salesforce case. Using the "
-    "connected tools, pull real data -- never guess or make up figures. "
+    "newly-logged Critical or High priority Salesforce case. You are "
+    "given a VERIFIED FACTS block below, already gathered for this "
+    "specific account -- health score, ARR, renewal/opportunity info, "
+    "other open cases, and the primary contact. Use ONLY those facts "
+    "for the Account Summary and Issue Summary sections. Do NOT call "
+    "sf_query, sf_describe_object, sf_get_open_opportunities, or any "
+    "other lookup tool -- everything you need is already provided, and "
+    "calling those tools risks surfacing a different account's data by "
+    "mistake, which must never happen. The only tool you may use is "
+    "sf_update_case, and only for the auto-escalation logic below.\n\n"
     "Respond with ONLY the three numbered sections below -- no preamble, "
     "no narrating what you're about to do or that you now have enough "
     "information, no extra header of your own (a header is already "
     "added separately before your response is posted). Start directly "
     "with \"1. *Account Summary*\".\n\n"
     "1. *Account Summary* -- lead with the account name itself in bold "
-    "(e.g. \u2022 Account: *Cambridge Life Sciences Corp*), then health "
-    "score, ARR, renewal date if any, and who the CSM is. If the "
-    "account's health score was already below 50 before this case, say "
-    "so explicitly -- that's a real escalation signal, not just "
-    "background.\n"
-    "2. *Issue Summary* -- what this case is actually about, and whether "
-    "this account has had other cases recently (a real pattern, not just "
-    "this one case in isolation -- check and say the actual count). If "
-    "a prior alert history section is included below, factor it in too "
-    "-- this is real, remembered context from previous alerts on this "
-    "account (not just cases), and a recurring pattern across multiple "
-    "alert types is a stronger signal than any one alert alone.\n"
-    "3. *Draft Customer Email* -- addressed to the account's actual "
-    "primary contact by name if one exists on file, acknowledging the "
-    "issue, giving a concrete next step, professional but not overly "
-    "apologetic. This is a DRAFT for a human to review and send -- never "
-    "claim it has already been sent.\n\n"
+    "(e.g. \u2022 Account: *Cambridge Life Sciences Corp*), then the "
+    "health score, ARR, renewal date if any, and CSM from the VERIFIED "
+    "FACTS block. If the account's health score was already below 50 "
+    "before this case, say so explicitly -- that's a real escalation "
+    "signal, not just background.\n"
+    "2. *Issue Summary* -- what this case is actually about, and "
+    "whether this account has had other cases recently, using the "
+    "other-open-cases list in VERIFIED FACTS (a real pattern, not just "
+    "this one case in isolation -- state the actual count from that "
+    "list). If a prior alert history section is included below, factor "
+    "it in too -- this is real, remembered context from previous "
+    "alerts on THIS account (not just cases), and a recurring pattern "
+    "across multiple alert types is a stronger signal than any one "
+    "alert alone. Only cite facts about this one account, from the "
+    "VERIFIED FACTS block or the prior alert history -- never mention "
+    "another company or account by name.\n"
+    "3. *Draft Customer Email* -- addressed to the primary contact "
+    "named in VERIFIED FACTS if one exists, acknowledging the issue, "
+    "giving a concrete next step, professional but not overly "
+    "apologetic. This is a DRAFT for a human to review and send -- "
+    "never claim it has already been sent.\n\n"
     "AUTO-ESCALATION -- you have the sf_update_case tool available. Use "
     "it to escalate this case's priority to Critical, ONLY if ALL of "
     "these are true: (a) the case is currently High, not already "
@@ -138,16 +150,85 @@ def find_new_cases(current_cases: list, seen_ids: set) -> list:
     return [c for c in current_cases if c["Id"] not in seen_ids]
 
 
+def gather_verified_facts(case: dict) -> str:
+    """Fetches everything the prompt needs about THIS account, scoped by
+    AccountId in every query -- deterministic, not left to Claude's own
+    tool exploration. This is what actually prevents another account's
+    data from ever entering the prompt, not just an instruction asking
+    Claude not to look elsewhere."""
+    account_id = case["AccountId"]
+
+    acct = sf_client.query(
+        f"SELECT Health_Score__c, AnnualRevenue, NPS__c, CSM_Owner_Name__c "
+        f"FROM Account WHERE Id = '{account_id}'"
+    )
+    acct = acct[0] if acct else {}
+
+    opps = sf_client.query(
+        f"SELECT Name, StageName, Amount, CloseDate FROM Opportunity "
+        f"WHERE AccountId = '{account_id}' AND IsClosed = false "
+        f"ORDER BY CloseDate ASC"
+    )
+
+    other_cases = sf_client.query(
+        f"SELECT CaseNumber, Subject, Priority, Status FROM Case "
+        f"WHERE AccountId = '{account_id}' AND Id != '{case['Id']}' "
+        f"AND Status != 'Closed' ORDER BY CreatedDate DESC"
+    )
+
+    contacts = sf_client.query(
+        f"SELECT Name, Title FROM Contact WHERE AccountId = '{account_id}' LIMIT 1"
+    )
+
+    lines = ["VERIFIED FACTS FOR THIS ACCOUNT (use these, don't look up more):"]
+    health = acct.get("Health_Score__c")
+    lines.append(f"- Health Score: {health if health is not None else 'not on file'}/100")
+    arr = acct.get("AnnualRevenue")
+    lines.append(f"- ARR: ${arr:,.0f}" if arr else "- ARR: not on file")
+    nps = acct.get("NPS__c")
+    if nps is not None:
+        lines.append(f"- NPS: {nps}")
+    csm = acct.get("CSM_Owner_Name__c")
+    lines.append(f"- CSM: {csm or 'not on file'}")
+
+    if opps:
+        lines.append("- Open opportunities on this account:")
+        for o in opps:
+            lines.append(
+                f"    - {o['Name']}, stage {o['StageName']}, "
+                f"${o['Amount']:,.0f}, closes {o['CloseDate']}"
+            )
+    else:
+        lines.append("- No open opportunities on this account.")
+
+    if other_cases:
+        lines.append(f"- {len(other_cases)} other open case(s) on this account:")
+        for c in other_cases:
+            lines.append(f"    - {c['CaseNumber']} ({c['Priority']}): {c['Subject']}")
+    else:
+        lines.append("- No other open cases on this account.")
+
+    if contacts:
+        c = contacts[0]
+        lines.append(f"- Primary contact: {c['Name']}, {c.get('Title') or 'no title on file'}")
+    else:
+        lines.append("- No contact on file for this account.")
+
+    return "\n".join(lines)
+
+
 def build_alert_prompt(case: dict) -> str:
     # .get(key, default) only falls back for a MISSING key, not one
     # present with a None value -- and AccountName is explicitly set
     # to None for a case with no related account, so `or` is needed
     # here, not a .get() default (caught by testing, not assumed).
     account_name = case.get("AccountName") or "unknown account"
+    facts = gather_verified_facts(case)
     return (
         f"A new {case['Priority']} case was just logged: \"{case['Subject']}\" "
         f"on account {account_name} "
         f"(Case ID: {case['Id']}). Generate the three-section alert as instructed."
+        f"\n\n{facts}"
     )
 
 
@@ -173,7 +254,7 @@ def check_for_new_cases():
         account_name = case.get("AccountName") or "unknown account"
         prompt = build_alert_prompt(case) + alert_history.format_history_for_prompt(account_name)
         try:
-            alert_text = asyncio.run(answer_question(prompt, SYSTEM_PROMPT))
+            alert_text = asyncio.run(answer_question(prompt, SYSTEM_PROMPT, tools=["sf_update_case"]))
         except Exception as e:
             alert_text = f"New {case['Priority']} case logged but the alert generation failed: {unwrap_exception(e)}"
 

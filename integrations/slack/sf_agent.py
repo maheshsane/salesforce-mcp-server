@@ -77,11 +77,15 @@ def unwrap_exception(e: BaseException) -> str:
     return f"{type(e).__name__}: {e}"
 
 
-async def answer_question(question: str, system_prompt: str) -> str:
+async def answer_question(question: str, system_prompt: str, tools: list = None) -> str:
     """Spawns server.py, discovers its tools, and runs the Claude
     tool-use loop until there's a final text answer. system_prompt is
     supplied by the caller -- an interactive command and a proactive
-    alert need different framing even though they share this same loop."""
+    alert need different framing even though they share this same loop.
+    tools, if given, is a list of tool names -- only those tools are
+    made available to Claude this call, not the full discovered set.
+    None (the default) keeps every existing caller's behavior exactly
+    as it was; only a caller that explicitly passes tools is affected."""
     server_params = StdioServerParameters(command="python3", args=[SERVER_PY_PATH])
 
     async with stdio_client(server_params) as (read, write):
@@ -89,12 +93,16 @@ async def answer_question(question: str, system_prompt: str) -> str:
             await session.initialize()
             tool_list = await session.list_tools()
             anthropic_tools = convert_mcp_tools_to_anthropic(tool_list.tools)
+            if tools is not None:
+                anthropic_tools = [t for t in anthropic_tools if t["name"] in tools]
 
             messages = [{"role": "user", "content": question}]
 
             for _ in range(MAX_TOOL_ITERATIONS):
+             
                 response = anthropic_client.messages.create(
-                    model=MODEL, max_tokens=8192, system=system_prompt,
+                    model=MODEL, max_tokens=8192,
+                    system=[{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}],
                     tools=anthropic_tools, messages=messages,
                 )
 
